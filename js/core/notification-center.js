@@ -63,6 +63,17 @@ function pushNotification(scope, title, body, type, incidentId){
   return item;
 }
 let NOTIF_SYNC_UNSUB = null;
+/* Removes the still-actionable alerts ("New dispatch request", "Dispatch escalation")
+   for a case that is no longer open to this unit, so the bell doesn't keep inviting
+   someone to accept a case another unit already took. */
+function retireDispatchAlerts(incidentId){
+  const all = db('notifications') || [];
+  const kept = all.filter(n=>!(n.incidentId===incidentId && (n.title==='New dispatch request' || n.title==='Dispatch escalation')));
+  if(kept.length!==all.length){ persistLocalNotifications(kept); }
+  const panel = document.getElementById('bell-panel');
+  if(panel && !panel.classList.contains('hidden')) renderBellPanel();
+  refreshBell();
+}
 function initNotificationSync(){
   teardownNotificationSync();
   const token = myNotificationScopeToken();
