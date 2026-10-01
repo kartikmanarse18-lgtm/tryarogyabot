@@ -207,6 +207,7 @@ function notifyForIncidentEvent(type, inc){
       const resp = db('responders').find(r=>r.id===CURRENT_RESPONDER_ID)||{};
       pushNotification('responder:'+CURRENT_RESPONDER_ID, 'Case confirmed', `You're assigned to ${inc.id}. Head to patient location now — you'll pick the receiving hospital once you've got the patient on board.`, 'success', inc.id);
     } else if(isMine.responder && (inc.notifiedResponders||[]).includes(CURRENT_RESPONDER_ID)){
+      retireDispatchAlerts(inc.id);
       pushNotification('responder:'+CURRENT_RESPONDER_ID, 'Case no longer available', `${inc.id} was accepted by another unit and removed from your queue.`, 'info', inc.id);
     }
     if(isMine.police && inc.notifiedPoliceId===CURRENT_POLICE_STATION_ID){
