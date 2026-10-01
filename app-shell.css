@@ -1,0 +1,102 @@
+/* #app-shell is now a fixed-height box pinned to the viewport (100dvh, with
+   the 100vh line first as a fallback for browsers that don't support dvh).
+   overflow:hidden here means the OUTER page itself never scrolls once the
+   app shell is showing — only .content-area (see below) scrolls, so the
+   topbar and sidenav stay visible at all times. */
+#app-shell{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;animation:fadeIn .4s;}
+.topbar{background:var(--shell-bg);color:var(--shell-fg);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--shell-border);position:sticky;top:0;z-index:1000;}
+.topbar-brand{display:flex;align-items:center;gap:12px;font-family:var(--ff-display);font-size:1.25rem;font-weight:700;text-decoration:none;color:inherit;}
+.pulse-indicator{width:10px;height:10px;border-radius:50%;background:#10b981;box-shadow:0 0 12px #10b981;animation:pulse 2s infinite;}
+@keyframes pulse{0%{transform:scale(.95);box-shadow:0 0 0 0 rgba(16,185,129,.7);}70%{transform:scale(1);box-shadow:0 0 0 10px rgba(16,185,129,0);}100%{transform:scale(.95);box-shadow:0 0 0 0 rgba(16,185,129,0);}}
+.topbar-actions{display:flex;align-items:center;gap:12px;}
+.role-badge-tag{font-family:var(--ff-mono);font-size:.72rem;text-transform:uppercase;font-weight:700;padding:4px 12px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);letter-spacing:1px;}
+
+.profile-wrap{position:relative;}
+.profile-btn{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.15rem;transition:background .2s;}
+.profile-btn:hover{background:rgba(255,255,255,.18);}
+.profile-menu{position:absolute;top:48px;right:0;width:280px;background:var(--bg-surface);color:var(--text-main);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.35);border:1px solid var(--border-color);z-index:2000;overflow:hidden;}
+.profile-menu-head{padding:18px 16px;background:var(--bg-subtle);display:flex;gap:12px;align-items:center;}
+.profile-avatar{width:42px;height:42px;border-radius:50%;background:var(--brand-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05rem;flex-shrink:0;}
+.profile-menu-name{font-weight:700;font-size:.92rem;}
+.profile-menu-sub{font-size:.76rem;color:var(--text-muted);margin-top:2px;font-family:var(--ff-mono);}
+.profile-menu-body{padding:10px;}
+.profile-menu-row{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;font-size:.8rem;color:var(--text-muted);}
+.profile-menu-row strong{color:var(--text-main);font-weight:600;}
+.profile-menu-logout{width:100%;text-align:left;padding:12px 10px;border-radius:10px;font-size:.85rem;font-weight:700;color:var(--brand-danger);display:flex;align-items:center;gap:10px;transition:background .15s;}
+.profile-menu-logout:hover{background:rgba(239,68,68,.1);}
+
+.bell-wrap{position:relative;}
+.bell-btn{position:relative;width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.05rem;}
+.bell-btn:hover{background:rgba(255,255,255,.18);}
+.bell-dot{position:absolute;top:-3px;right:-3px;background:var(--brand-danger);color:#fff;font-size:.62rem;font-weight:800;min-width:16px;height:16px;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--shell-bg);}
+.bell-panel{position:absolute;top:48px;right:0;width:340px;max-height:420px;overflow-y:auto;background:var(--bg-surface);color:var(--text-main);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.35);border:1px solid var(--border-color);z-index:2000;}
+.bell-panel-head{padding:14px 16px;border-bottom:1px solid var(--border-color);font-weight:700;font-size:.85rem;display:flex;justify-content:space-between;align-items:center;}
+.bell-item{padding:12px 16px;border-bottom:1px solid var(--border-color);font-size:.83rem;display:flex;gap:10px;}
+.bell-item:last-child{border-bottom:none;}
+.bell-item.unread{background:var(--bg-subtle);}
+.bell-item i{color:var(--brand-primary);margin-top:2px;}
+.bell-item-title{font-weight:700;margin-bottom:2px;}
+.bell-item-body{color:var(--text-muted);font-size:.78rem;}
+.bell-item-time{color:var(--text-muted);font-size:.68rem;font-family:var(--ff-mono);margin-top:4px;}
+.bell-empty{padding:30px 16px;text-align:center;color:var(--text-muted);font-size:.85rem;}
+
+/* .app-container is the row: sidenav-wrap + content-area. It fills whatever
+   height #app-shell gives it below the topbar. min-height:0 + overflow:hidden
+   are the two properties flex children need to actually respect that height
+   instead of growing to fit content (the classic flexbox scroll-container
+   trap) — without them .content-area's own overflow-y:auto below has nothing
+   to bite into and just grows forever, which was the original bug. */
+.app-container{flex:1;display:flex;min-height:0;overflow:hidden;}
+/* Sidenav no longer needs position:sticky — .app-container itself never
+   scrolls now, so the sidenav's natural height:100% keeps it fully visible
+   the whole time, while .content-area (below) is its own independent
+   scroll box. This is the deliberate nested-scroll layout: nav stays put,
+   only the section content scrolls past it.
+   Note for mobile webviews: nested scroll areas used to be flaky there, but
+   that was in combination with `overflow-x:auto` chip rows fighting the
+   page's own vertical scroll. With the page itself no longer scrolling
+   (#app-shell has overflow:hidden) there's only ever one active vertical
+   scroll surface at a time, so that failure mode doesn't apply here. */
+.sidenav-wrap{height:100%;flex-shrink:0;position:relative;}
+.sidenav{width:250px;height:100%;overflow-y:auto;background:var(--shell-bg);border-right:1px solid var(--shell-border);padding:20px 14px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.nav-link{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;color:var(--shell-muted);text-decoration:none;font-size:.9rem;font-weight:600;transition:all .2s ease;background:transparent;width:100%;text-align:left;}
+.nav-link i{font-size:1.05rem;width:22px;text-align:center;}
+.nav-link:hover{color:var(--shell-fg);background:rgba(255,255,255,.06);}
+.nav-link.active{color:#fff;background:var(--brand-primary);box-shadow:0 4px 16px rgba(0,0,0,.2);}
+/* THE scroll container for section content. min-height:0 lets it actually
+   shrink to the flex row's height instead of pushing .app-container taller;
+   overscroll-behavior:contain stops an over-scroll at the top/bottom from
+   "leaking" into a rubber-band bounce on the (non-scrolling) page behind it;
+   -webkit-overflow-scrolling:touch keeps momentum scrolling smooth in older
+   iOS webviews. */
+.content-area{flex:1;min-height:0;padding:28px 36px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;max-width:1400px;margin:0 auto;width:100%;}
+.sidenav-scroll-hint{display:none;}
+@media (max-width:900px){
+  .app-container{flex-direction:column;}
+  /* On mobile the sidenav becomes a horizontal chip row pinned to its own
+     natural height at the top (flex-shrink:0 so content-area can't squeeze
+     it); content-area below it takes all remaining height and is the only
+     thing that scrolls vertically. */
+  .sidenav-wrap{width:100%;height:auto;flex-shrink:0;z-index:900;}
+  .sidenav{width:100%;height:auto;overflow-y:visible;border-right:none;border-bottom:1px solid var(--shell-border);flex-direction:row;overflow-x:auto;padding:10px;scroll-behavior:smooth;}
+  .nav-link{white-space:nowrap;padding:9px 14px;font-size:.85rem;}
+  .content-area{padding:18px;min-height:0;}
+  .topbar{padding:0 14px;}
+  .role-badge-tag{display:none;}
+  .bell-panel{width:92vw;right:-40px;}
+  /* Peek-and-fade cue so a horizontally-scrollable nav doesn't look like a
+     complete, fixed row of tabs — the next item is visibly cut off under a
+     gradient with a nudging chevron, so people notice there's more to the
+     side. Disappears once they've actually scrolled to the end (see
+     updateSidenavScrollHint()), so it doesn't linger once discovered. */
+  .sidenav-scroll-hint{
+    display:flex; align-items:center; justify-content:flex-end;
+    position:absolute; top:0; right:0; bottom:1px; width:46px;
+    padding-right:4px;
+    background:linear-gradient(to right, transparent, var(--shell-bg) 60%);
+    color:var(--shell-muted); pointer-events:none; z-index:2;
+  }
+  .sidenav-scroll-hint i{ animation:sidenavHintNudge 1.4s ease-in-out infinite; }
+  .sidenav-scroll-hint.hidden{ display:none; }
+}
+@keyframes sidenavHintNudge{ 0%,100%{ transform:translateX(0); opacity:.55; } 50%{ transform:translateX(4px); opacity:1; } }
