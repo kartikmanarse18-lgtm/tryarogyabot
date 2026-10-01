@@ -44,17 +44,49 @@ function viewResponderDash(){
   ${pending.length ? `<div class="card"><h3 style="margin-top:0;">You have ${pending.length} pending request(s)</h3><button class="btn btn-danger" onclick="renderCurrentView('r-queue')">Open dispatch queue</button></div>` : ''}
   ${mine.length ? `<div class="card"><h3 style="margin-top:0;">Active case in progress</h3><button class="btn" onclick="renderCurrentView('r-active')">Open live case</button></div>` : ''}`;
 }
-/* Pending = still open for everyone AND nobody has claimed it yet. The extra
-   assignedResponderId check means a case vanishes from every other unit's queue
-   the instant one unit is assigned, even if the status field hasn't synced yet. */
+/* Pending = still open for everyone AND nobody has claimed it yet, AND not stale,
+   AND not dismissed by this unit. The assignedResponderId check removes a case from
+   every other unit's queue the instant one unit is assigned. The age cutoff and the
+   dismissed list clean out OLD requests that were never accepted or closed. */
+const QUEUE_STALE_MS = 15*60*1000; // a request nobody took in 15 min is no longer a live dispatch
+function incidentStartTs(i){
+  const t = i.createdAt || (i.timeline && i.timeline[0] && i.timeline[0].ts) || i.updatedAt || 0;
+  return Number(t)||0;
+}
+function dismissedQueueKey(){ return 'arogya_dismissed_queue_'+CURRENT_RESPONDER_ID; }
+function getDismissedQueue(){
+  try{ return JSON.parse(localStorage.getItem(dismissedQueueKey())||'[]'); }catch(e){ return []; }
+}
 function pendingIncidentsForMe(){
-  return db('incidents').filter(i=>i.status==='broadcasting' && !i.assignedResponderId && (i.notifiedResponders||[]).includes(CURRENT_RESPONDER_ID));
+  const dismissed = new Set(getDismissedQueue());
+  const cutoff = Date.now()-QUEUE_STALE_MS;
+  return db('incidents').filter(i=>{
+    if(i.status!=='broadcasting' || i.assignedResponderId) return false;
+    if(!(i.notifiedResponders||[]).includes(CURRENT_RESPONDER_ID)) return false;
+    if(dismissed.has(i.id)) return false;
+    const t = incidentStartTs(i);
+    return !t || t>=cutoff;
+  });
+}
+/* "Clear all" — hides every request currently in this unit's queue, removes their
+   bell alerts, and (best effort) tells the server this unit declined them. */
+async function clearDispatchQueue(){
+  const list = db('incidents').filter(i=>i.status==='broadcasting' && !i.assignedResponderId && (i.notifiedResponders||[]).includes(CURRENT_RESPONDER_ID));
+  const dismissed = new Set(getDismissedQueue());
+  list.forEach(i=>{ dismissed.add(i.id); retireDispatchAlerts(i.id); });
+  try{ localStorage.setItem(dismissedQueueKey(), JSON.stringify([...dismissed].slice(-500))); }catch(e){}
+  showToast('Queue cleared', list.length+' old request(s) removed from your queue.', 'info');
+  renderCurrentView('r-queue');
+  list.forEach(i=>{
+    sosApi(`/api/sos/${i.id}/update`, { patch:{ notifiedResponders:(i.notifiedResponders||[]).filter(r=>r!==CURRENT_RESPONDER_ID) } }).catch(()=>{});
+  });
 }
 function viewResponderQueue(){
   const pending = pendingIncidentsForMe();
   const hospitals = db('hospitals');
   return `
   ${viewHeader('Dispatch Queue','Incoming emergency requests','First responder to accept gets the case — everyone else notified instantly it\'s taken.')}
+  ${pending.length ? `<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button class="btn btn-secondary btn-sm" onclick="clearDispatchQueue()"><i class="fa-solid fa-broom"></i> Clear all</button></div>` : ''}
   ${pending.length ? pending.map(inc=>{
     const dKm = haversineKm(SEED_RESPONDER(CURRENT_RESPONDER_ID).lat, SEED_RESPONDER(CURRENT_RESPONDER_ID).lng, inc.lat, inc.lng);
     return `<div class="incident-card">
