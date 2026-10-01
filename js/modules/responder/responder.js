@@ -21,7 +21,7 @@ function responderBadgeTier(count){
 }
 function viewResponderDash(){
   const mine = db('incidents').filter(i=>i.assignedResponderId===CURRENT_RESPONDER_ID && i.status!=='closed');
-  const pending = db('incidents').filter(i=>i.status==='broadcasting' && i.notifiedResponders.includes(CURRENT_RESPONDER_ID));
+  const pending = pendingIncidentsForMe();
   const myResp = (db('responders').find(r=>r.id===CURRENT_RESPONDER_ID)||{});
   const myStatus = myResp.status || 'available';
   const casesHelped = myResp.casesHelped || 0;
@@ -44,8 +44,14 @@ function viewResponderDash(){
   ${pending.length ? `<div class="card"><h3 style="margin-top:0;">You have ${pending.length} pending request(s)</h3><button class="btn btn-danger" onclick="renderCurrentView('r-queue')">Open dispatch queue</button></div>` : ''}
   ${mine.length ? `<div class="card"><h3 style="margin-top:0;">Active case in progress</h3><button class="btn" onclick="renderCurrentView('r-active')">Open live case</button></div>` : ''}`;
 }
+/* Pending = still open for everyone AND nobody has claimed it yet. The extra
+   assignedResponderId check means a case vanishes from every other unit's queue
+   the instant one unit is assigned, even if the status field hasn't synced yet. */
+function pendingIncidentsForMe(){
+  return db('incidents').filter(i=>i.status==='broadcasting' && !i.assignedResponderId && (i.notifiedResponders||[]).includes(CURRENT_RESPONDER_ID));
+}
 function viewResponderQueue(){
-  const pending = db('incidents').filter(i=>i.status==='broadcasting' && i.notifiedResponders.includes(CURRENT_RESPONDER_ID));
+  const pending = pendingIncidentsForMe();
   const hospitals = db('hospitals');
   return `
   ${viewHeader('Dispatch Queue','Incoming emergency requests','First responder to accept gets the case — everyone else notified instantly it\'s taken.')}
@@ -84,7 +90,11 @@ async function declineIncident(incId, respId){
 
 async function acceptIncident(incId, respId){
   const inc = db('incidents').find(i=>i.id===incId);
-  if(!inc || inc.status!=='broadcasting') return;
+  if(!inc || inc.status!=='broadcasting' || (inc.assignedResponderId && inc.assignedResponderId!==respId)){
+    showToast('Already taken', 'Another unit accepted this case.', 'info');
+    renderCurrentView('r-queue');
+    return;
+  }
   const responders = db('responders');
   const resp = responders.find(r=>r.id===respId);
 
@@ -94,10 +104,22 @@ async function acceptIncident(incId, respId){
       patch: { status: 'accepted', assignedResponderId: respId },
       timelineText: `${resp.name} (${resp.vehicle}) accepted the case · heading to patient. Hospital will be chosen after pickup.`
     });
+    // Race guard: if two units tap Accept together, the server's answer says who
+    // actually won. Only the winner goes busy; the loser is sent back to the queue.
+    if(incident && incident.assignedResponderId && incident.assignedResponderId!==respId){
+      handleIncidentEvent('incident_accept', incident);
+      showToast('Already taken', 'Another unit accepted this case first.', 'info');
+      renderCurrentView('r-queue');
+      return;
+    }
     resp.status = 'busy';
     dbSet('responders', responders);
     handleIncidentEvent('incident_accept', incident);
-  }catch(e){ console.error('accept failed', e); showToast('Accept failed', 'Please try again.', 'danger'); return; }
+  }catch(e){
+    console.error('accept failed', e);
+    if(e.status===409){ showToast('Already taken', 'Another unit accepted this case first.', 'info'); renderCurrentView('r-queue'); return; }
+    showToast('Accept failed', 'Please try again.', 'danger'); return;
+  }
   audit('responder:'+respId, 'accept', incId);
 
   if(currentRole==='responder') renderCurrentView('r-active');
@@ -256,7 +278,7 @@ function startLiveIncidentTracking(){
       // screen wouldn't see a brand-new SOS (or an escalated 10km case) until they
       // manually navigated away and back, since nothing here was polling before.
       stillActive = true;
-      const pendingIds = db('incidents').filter(i=>i.status==='broadcasting' && i.notifiedResponders.includes(CURRENT_RESPONDER_ID)).map(i=>i.id).sort().join(',');
+      const pendingIds = pendingIncidentsForMe().map(i=>i.id).sort().join(',');
       if(pendingIds !== lastRQueueSnapshot){ lastRQueueSnapshot = pendingIds; renderCurrentView('r-queue'); }
     } else if(currentView==='po-feed'){
       const incidentsNow = myStationIncidents();
