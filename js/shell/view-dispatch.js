@@ -33,7 +33,7 @@ function postRenderHooks(navId){
   if(navId==='p-sos'){ initSosMapIfNeeded(); startLiveIncidentTracking(); rehydrateInProgressSOS(); }
   if(navId==='r-active'){ initResponderMap(); startLiveIncidentTracking(); }
   if(navId==='r-queue'){
-    lastRQueueSnapshot = db('incidents').filter(i=>i.status==='broadcasting' && i.notifiedResponders.includes(CURRENT_RESPONDER_ID)).map(i=>i.id).sort().join(',');
+    lastRQueueSnapshot = pendingIncidentsForMe().map(i=>i.id).sort().join(',');
     startLiveIncidentTracking();
   }
   if(navId==='po-feed'){ initPoliceMap(); startLiveIncidentTracking(); }
