@@ -1,0 +1,47 @@
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --ff-sans:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+  --ff-display:'Space Grotesk',sans-serif;
+  --ff-mono:'JetBrains Mono',monospace;
+  --bg-main:#f4f7f6; --bg-surface:#ffffff; --bg-subtle:#e8f0ec;
+  --text-main:#111915; --text-muted:#52635a; --border-color:rgba(17,25,21,.1);
+  --shadow-sm:0 2px 8px rgba(17,25,21,.05); --shadow-md:0 8px 24px rgba(17,25,21,.09); --shadow-lg:0 16px 36px rgba(17,25,21,.14);
+  --radius-sm:8px; --radius-md:14px; --radius-lg:20px;
+  --brand-primary:#0d9488; --brand-primary-hover:#0f766e; --brand-secondary:#0284c7;
+  --brand-accent:#f59e0b; --brand-danger:#ef4444; --brand-success:#10b981;
+  --shell-bg:#0f172a; --shell-fg:#f8fafc; --shell-muted:rgba(248,250,252,.65); --shell-border:rgba(248,250,252,.12);
+}
+[data-role="responder"]{
+  --bg-main:#0b0f17; --bg-surface:#131b2a; --bg-subtle:#1c273c;
+  --text-main:#f1f5f9; --text-muted:#94a3b8; --border-color:rgba(241,245,249,.12);
+  --brand-primary:#ef4444; --brand-primary-hover:#dc2626; --brand-secondary:#f59e0b;
+}
+[data-role="hospital"]{
+  --bg-main:#f0f4f9; --bg-surface:#ffffff; --bg-subtle:#e1e9f5;
+  --text-main:#0f172a; --text-muted:#475569; --border-color:rgba(15,23,42,.12);
+  --brand-primary:#2563eb; --brand-primary-hover:#1d4ed8; --brand-secondary:#0d9488;
+}
+[data-role="police"]{
+  --bg-main:#101018; --bg-surface:#181826; --bg-subtle:#22223a;
+  --text-main:#f1f0f8; --text-muted:#9d9bc4; --border-color:rgba(241,240,248,.12);
+  --brand-primary:#6366f1; --brand-primary-hover:#4f46e5; --brand-secondary:#f59e0b;
+}
+[data-role="pharmacy"]{
+  --bg-main:#f6f9f2; --bg-surface:#ffffff; --bg-subtle:#eaf2e2;
+  --text-main:#182b17; --text-muted:#54694f; --border-color:rgba(24,43,23,.12);
+  --brand-primary:#16a34a; --brand-primary-hover:#15803d; --brand-secondary:#0d9488;
+}
+/* Note: doctor console intentionally has no separate [data-role="doctor"]
+   theme — enterConsole() themes it as 'hospital' so it visually sits under
+   the hospital's shell instead of having its own top-level identity. */
+*,*::before,*::after{box-sizing:border-box;}
+body,html{margin:0;padding:0;font-family:var(--ff-sans);background:var(--bg-main);color:var(--text-main);-webkit-font-smoothing:antialiased;line-height:1.5;overflow-x:hidden;}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;background:none;}
+input,select,textarea{font-family:inherit;outline:none;}
+.hidden{display:none !important;}
+a{color:inherit;}
+::-webkit-scrollbar{width:8px;height:8px;} ::-webkit-scrollbar-thumb{background:rgba(128,128,128,.35);border-radius:8px;}
+
+/* ============ LANDING ============ */
