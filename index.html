@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ArogyaBot — Emergency &amp; Health Intelligence Platform</title>
+
+<!-- ============================================================
+     PWA — manifest + icons + platform meta tags. Paths are all
+     RELATIVE (./manifest.json, ./icons/...) on purpose: this app is
+     hosted on GitHub Pages, which can serve from either a user site
+     (username.github.io, at the domain root) or a project site
+     (username.github.io/repo-name/, one level down). Relative paths
+     resolve correctly from wherever index.html actually lives in
+     either case; absolute paths starting with "/" would break on a
+     project site. See sw.js for the same reasoning applied to the
+     service worker's own registration scope.
+     ============================================================ -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="./icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="./icons/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ArogyaBot">
+<meta name="mobile-web-app-capable" content="yes">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- ===== Stylesheets (split by area; order matters — later files may override earlier ones) ===== -->
+<link rel="stylesheet" href="./css/tokens.css" onerror="window.__fileFailed&&__fileFailed(this)">
+<link rel="stylesheet" href="./css/base-and-screens.css" onerror="window.__fileFailed&&__fileFailed(this)">
+<link rel="stylesheet" href="./css/app-shell.css" onerror="window.__fileFailed&&__fileFailed(this)">
+<link rel="stylesheet" href="./css/quick-drawer.css" onerror="window.__fileFailed&&__fileFailed(this)">
+<link rel="stylesheet" href="./css/views-and-components.css" onerror="window.__fileFailed&&__fileFailed(this)">
+<link rel="stylesheet" href="./css/invoice-print.css" onerror="window.__fileFailed&&__fileFailed(this)">
+<link rel="stylesheet" href="./css/fitness-and-health-tools.css" onerror="window.__fileFailed&&__fileFailed(this)">
+</head>
+<body>
+
+<!-- ============================================================
+     SPLASH — shown by default while boot() waits on Firebase Auth to
+     restore (or rule out) a persisted session. Previously #screen-landing
+     (role selection) was the one visible by default instead, so a
+     returning logged-in user saw it flash on-screen for a beat before
+     boot() swapped it out for their dashboard — reading as "why am I
+     being logged out on every reload?" even though the session itself
+     was fine. This shows neutral loading branding for that same beat
+     instead of a screen that implies you need to log in.
+     ============================================================ -->
+<div id="screen-splash" style="min-height:100vh;background:#0f172a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+  <div class="hero-logo"><i class="fa-solid fa-heart-pulse"></i>ArogyaBot</div>
+  <i class="fa-solid fa-circle-notch fa-spin" style="font-size:1.4rem;opacity:.7;"></i>
+</div>
+
+<!-- ============================================================
+     AUTH / VERIFICATION SCREEN
+     ============================================================ -->
+<div id="screen-auth" class="hidden">
+  <div class="landing-hero">
+    <div class="hero-logo"><i class="fa-solid fa-heart-pulse"></i>ArogyaBot</div>
+    <div class="hero-tagline" id="auth-role-tagline">Emergency &amp; Health Intelligence Platform</div>
+  </div>
+  <div class="auth-card" id="auth-card-box"></div>
+</div>
+
+<!-- ============================================================
+     LANDING — ROLE SELECT (first screen)
+     ============================================================ -->
+<div id="screen-landing" class="hidden">
+  <div class="landing-hero">
+    <div class="hero-logo"><i class="fa-solid fa-heart-pulse"></i>ArogyaBot</div>
+    <div class="hero-tagline">Emergency &amp; Health Intelligence Platform</div>
+    <p class="hero-desc">Tell us who's signing in. Each console has its own sign-up and verification, and every emergency still broadcasts to the nearest hospitals, ambulances, and police simultaneously — no single point of failure.</p>
+    <button class="btn-secondary btn-sm hidden" id="pwa-install-btn-landing" style="margin-top:14px;color:#fff;background:rgba(255,255,255,.12);" onclick="triggerPwaInstall()"><i class="fa-solid fa-download"></i> Install app</button>
+  </div>
+  <div class="badge-grid" id="badge-grid"></div>
+</div>
+
+<!-- ============================================================
+     DOCTOR LOGIN — simple email + password only. Doctor accounts
+     are provisioned by a hospital from its Doctor Roster screen,
+     not self-registered, so there is no signup/OTP flow here.
+     ============================================================ -->
+<div id="screen-doctor-login" class="hidden">
+  <div class="landing-hero">
+    <div class="hero-logo"><i class="fa-solid fa-user-doctor"></i>ArogyaBot</div>
+    <div class="hero-tagline">Doctor sign-in</div>
+  </div>
+  <div class="auth-card" id="doctor-login-card-box"></div>
+</div>
+
+<!-- ============================================================
+     DELIVERY LOGIN — simple email + password only. Delivery boy
+     accounts are provisioned by a pharmacy from its Delivery Boys
+     screen, not self-registered, so there is no signup/OTP flow here.
+     ============================================================ -->
+<div id="screen-delivery-login" class="hidden">
+  <div class="landing-hero">
+    <div class="hero-logo"><i class="fa-solid fa-motorcycle"></i>ArogyaBot</div>
+    <div class="hero-tagline">Delivery sign-in</div>
+  </div>
+  <div class="auth-card" id="delivery-login-card-box"></div>
+</div>
+
+
+<!-- ============================================================
+     ADMIN — reviews phone-number-conflict complaints
+     ============================================================ -->
+<div id="screen-admin" class="hidden">
+  <div class="landing-hero">
+    <div class="hero-logo"><i class="fa-solid fa-user-shield"></i>ArogyaBot Admin</div>
+    <div class="hero-tagline">Phone-number verification &amp; complaint desk</div>
+  </div>
+  <div class="auth-card" id="admin-card-box" style="max-width:560px;"></div>
+</div>
+
+<!-- ============================================================
+     GENERIC MODAL (Family Members etc.)
+     ============================================================ -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="if(event.target===this) closeModal();">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<!-- ============================================================
+     PRINT-ONLY INVOICE AREA (Pharmacy billing)
+     Stays empty/hidden on screen at all times; only shown by the
+     @media print rules below once printBillInvoice() fills it in.
+     ============================================================ -->
+<div id="print-invoice-area"></div>
+
+<!-- ============================================================
+     APP SHELL
+     ============================================================ -->
+<div id="app-shell" class="hidden">
+  <div class="topbar">
+    <a href="#" class="topbar-brand" onclick="return false;"><i class="fa-solid fa-heart-pulse" style="color:#10b981;"></i>ArogyaBot</a>
+    <div class="topbar-actions">
+      <button class="bell-btn hidden" id="pwa-install-btn" onclick="triggerPwaInstall()" title="Install ArogyaBot as an app"><i class="fa-solid fa-download"></i></button>
+      <span class="role-badge-tag" id="current-role-tag">PATIENT</span>
+      <div class="bell-wrap">
+        <button class="bell-btn" onclick="toggleBell(event)"><i class="fa-solid fa-bell"></i><span class="bell-dot hidden" id="bell-count">0</span></button>
+        <div class="bell-panel hidden" id="bell-panel"></div>
+      </div>
+      <div class="profile-wrap">
+        <button class="profile-btn" onclick="toggleProfileMenu(event)"><i class="fa-solid fa-circle-user"></i></button>
+        <div class="profile-menu hidden" id="profile-menu"></div>
+      </div>
+    </div>
+  </div>
+  <div class="app-container">
+    <div class="sidenav-wrap">
+      <nav class="sidenav" id="app-sidenav"></nav>
+      <div class="sidenav-scroll-hint hidden" id="sidenav-scroll-hint"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+    <main class="content-area" id="app-content-area"><div id="active-view-container"></div></main>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-stack"></div>
+
+<!-- ===== Third-party libraries (CDN) ===== -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<!-- ===== App scripts. ORDER MATTERS: classic scripts share one global scope, and each
+     file may use things defined in files above it. To add a feature, add a new file
+     and list it here. config first, bootstrap (main.js) last. ===== -->
+<script src="./js/core/load-guard.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/config/app-config.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/core/pwa.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/core/utils-and-seed-data.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/core/location-tracking.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/sos-worker-client.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/core/storage.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/core/account-isolation.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/firebase-sync.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/emailjs-otp.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/ui/modal.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/payments.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/firebase-secondary-app.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/public-directories.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/private-account-sync.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/hard-tier-sync.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/users-sync.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/video-call.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/core/notification-center.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/core/notification-sound.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/ui/toasts.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/landing.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/profile-menu.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/auth-dispatch.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/patient-auth.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/aadhaar-and-access-grants.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/shared-role-auth.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/doctor-login.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/delivery-login.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/role-auth-flows.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/family-members.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/admin-desk.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/shell/side-nav.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/shell/quick-access-drawer.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/shell/view-dispatch.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/dashboard.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/fitness-tools.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/nutrition-tools.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/vitals-screening.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/nearby-help.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/sos.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/responder/responder.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/police/police.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/hospital/hospital.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/doctor/doctor-console.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/pharmacy/pharmacy-console.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/pharmacy/inventory.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/pharmacy/billing-invoicing.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/pharmacy/delivery-roster.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/delivery/delivery-console.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/ai-chat.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/symptom-history.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/records.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/my-documents.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/telemedicine.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/e-prescriptions.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/pharmacy-reminders.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/medicine-reminder-clock.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/medication-dosage.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/lifestyle-tools.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/womens-health.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/pregnancy-tools.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/modules/patient/insurance-schemes.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/maps-leaflet.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/auth/secret-admin-access.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/main.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+</body>
+</html>
