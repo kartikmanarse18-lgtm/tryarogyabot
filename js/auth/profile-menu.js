@@ -48,6 +48,7 @@ function renderProfileMenu(){
 }
 function logout(silent){
   if(typeof abdmResetViewState==='function') abdmResetViewState();
+  if(typeof dlResetViewState==='function') dlResetViewState();
   cycSessionUnlocked = false; // re-lock Women's Health so the next person to open this device must re-enter the PIN
   if(liveTrackingTimer){ clearInterval(liveTrackingTimer); liveTrackingTimer=null; }
   stopDeliveryBoyLiveTracking(); // stop listening to a tracked delivery boy's live-position doc
