@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+www/
+# the Android project is generated in CI (npm run android:setup locally) — nothing in it is hand-edited
+android/
+# secrets — never commit
+android/app/google-services.json
+*.keystore
+*.jks
