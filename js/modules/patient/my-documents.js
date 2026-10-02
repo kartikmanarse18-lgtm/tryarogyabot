@@ -21,7 +21,7 @@ function viewPatientDocuments(){
     <label class="doc-dropzone" for="doc-file-input">
       <i class="fa-solid fa-cloud-arrow-up"></i>
       <strong>Tap to choose a file</strong>
-      <div style="color:var(--text-muted);font-size:.8rem;margin-top:4px;">PDF or image · insurance card, discharge summary, old prescriptions, etc.</div>
+      <div style="color:var(--text-muted);font-size:.8rem;margin-top:4px;">PDF or image · insurance card, discharge summary, old prescriptions, etc.${(typeof docStorageEnabled==='function'&&docStorageEnabled())?' · up to 10 MB':''}</div>
     </label>
     <input type="file" id="doc-file-input" accept=".pdf,image/*" style="display:none;" onchange="handleDocUpload(event)">
     <div id="doc-upload-status"></div>
@@ -32,17 +32,19 @@ function viewPatientDocuments(){
       <div class="doc-row">
         <div class="doc-row-icon"><i class="fa-solid ${DOC_CATEGORIES[d.category]?.icon||'fa-file'}"></i></div>
         <div>
-          <div class="doc-row-name">${d.name}</div>
-          <div class="doc-row-meta">${DOC_CATEGORIES[d.category]?.label||'Other'} · ${d.sizeKB} KB · ${fmtTime(d.uploadedAt)}</div>
+          <div class="doc-row-name">${docEsc(d.name)}</div>
+          <div class="doc-row-meta">${DOC_CATEGORIES[d.category]?.label||'Other'} · ${d.sizeKB} KB · ${fmtTime(d.uploadedAt)}${d.storagePath?' · Cloud':''}</div>
         </div>
         <div class="doc-row-actions">
-          <a class="btn btn-secondary btn-sm" href="${d.dataUrl}" download="${d.name}"><i class="fa-solid fa-download"></i></a>
+          ${d.storagePath ? `<button class="btn btn-secondary btn-sm" onclick="docOpenFromStorage('${d.id}')" title="Open"><i class="fa-solid fa-download"></i></button>` : `<a class="btn btn-secondary btn-sm" href="${d.dataUrl}" download="${docEsc(d.name)}"><i class="fa-solid fa-download"></i></a>`}
           <button class="btn btn-secondary btn-sm" onclick="deleteDocument('${d.id}')"><i class="fa-solid fa-trash"></i></button>
         </div>
       </div>`).join('')}</div>` : `<div class="empty-state"><i class="fa-solid fa-folder-open"></i><p>No documents uploaded yet.</p></div>`}
   </div>`;
 }
 function handleDocUpload(evt){
+  // Phase 3: cloud-storage path (only when flag on + SDK + Firebase login); otherwise the original code below runs unchanged.
+  if(typeof docStorageEnabled==='function' && docStorageEnabled()) return handleDocUploadToStorage(evt);
   const file = evt.target.files[0];
   const status = document.getElementById('doc-upload-status');
   if(!file) return;
@@ -78,8 +80,10 @@ function handleDocUpload(evt){
 function deleteDocument(id){
   // Guard ownership too, not just id — a patient should never be able to
   // delete another account's document even if an id were somehow guessed.
+  const removed = (db('documents')||[]).find(d=>d.id===id && d.ownerId===currentPatientId());
   const docs = (db('documents')||[]).filter(d=>!(d.id===id && d.ownerId===currentPatientId()));
   dbSet('documents', docs);
+  if(removed && removed.storagePath && typeof docRemoveFromStorage==='function') docRemoveFromStorage(removed.storagePath);
   showToast('Document removed', '', 'success');
   renderCurrentView('p-documents');
 }
