@@ -108,7 +108,7 @@ async function appTests(){
 function staticTests(){
   const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8'),idx=fs.readFileSync(path.join(root,'index.html'),'utf8');
   ['js/services/abdm-client.js','js/modules/patient/abha-health-id.js'].forEach(f=>{ok('sw.js caches '+f,sw.includes('./'+f));ok('index.html loads '+f+' before main.js',idx.indexOf(f)>0&&idx.indexOf(f)<idx.indexOf('js/main.js'));});
-  ok('sw.js CACHE_VERSION bumped',/CACHE_VERSION = 'v4'/.test(sw));
+  ok('sw.js CACHE_VERSION bumped (v4 or newer)',(+((sw.match(/CACHE_VERSION = 'v(\d+)'/)||[])[1]||0))>=4);
   const cfg=fs.readFileSync(path.join(root,'js/config/app-config.js'),'utf8');
   ok('no ABDM secrets in app-config.js',!/ABDM_CLIENT_(ID|SECRET)/.test(cfg)&&/ABDM_ENABLED = false/.test(cfg));
   const bundle=['js/services/abdm-client.js','js/modules/patient/abha-health-id.js'].map(f=>fs.readFileSync(path.join(root,f),'utf8')).join('');
