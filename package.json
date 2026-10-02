@@ -1,0 +1,28 @@
+{
+  "name": "arogyabot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ArogyaBot \u2014 Emergency & Health Intelligence Platform (web + Android via Capacitor)",
+  "scripts": {
+    "build:web": "node scripts/build-web.js",
+    "android:setup": "npm run build:web && cap add android && python3 scripts/patch-android.py && python3 scripts/make-android-icons.py && cap sync android",
+    "sync": "npm run build:web && cap sync android",
+    "android:open": "npm run sync && cap open android",
+    "android:debug": "npm run sync && cd android && gradlew assembleDebug",
+    "icons": "python3 scripts/make-android-icons.py",
+    "test": "cd tests && npm install --no-audit --no-fund && npm test"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/local-notifications": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

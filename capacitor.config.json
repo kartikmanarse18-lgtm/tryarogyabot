@@ -1,0 +1,17 @@
+{
+  "appId": "in.arogyabot.app",
+  "appName": "ArogyaBot",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_arogya",
+      "iconColor": "#10b981"
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}
