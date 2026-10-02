@@ -44,6 +44,7 @@ function renderFamilyModal(){
 }
 function switchFamilyMember(memberId){
   const u = currentUserRecord(); if(!u) return;
+  if(typeof abdmResetViewState==='function') abdmResetViewState(); // ABDM: never carry an OTP step/txn across members
   cycSessionUnlocked = false; // each family member's cycle data needs the PIN re-entered on switch, not just on first unlock
   persistActiveProfileBackToMember();
   u.activeMemberId = memberId;

@@ -39,6 +39,7 @@ function renderProfileMenu(){
     <div class="profile-menu-body">
       ${idn.sub ? `<div class="profile-menu-row"><span>${idn.sub.includes('@')?'Account':'Phone'}</span><strong>${idn.sub}</strong></div>` : ''}
       ${currentRole==='patient' ? `<button class="profile-menu-logout" style="color:var(--text-main);" onclick="openFamilyModal()"><i class="fa-solid fa-people-roof"></i> Family members</button>` : ''}
+      ${currentRole==='patient' && typeof abdmEnabled==='function' && abdmEnabled() ? `<button class="profile-menu-logout" style="color:var(--text-main);" onclick="renderCurrentView('p-abha');document.getElementById('profile-menu').classList.add('hidden')"><i class="fa-solid fa-id-card-clip"></i> ABHA Health ID</button>` : ''}
       ${currentRole==='responder' ? `<button class="profile-menu-logout" style="color:var(--text-main);" onclick="beginLiveLocationTracking('responder');showToast('Refreshing location','Re-requesting GPS access…','info')"><i class="fa-solid fa-location-crosshairs"></i> Refresh live location</button>` : ''}
       ${currentRole==='hospital' ? `<button class="profile-menu-logout" style="color:var(--text-main);" onclick="captureOneTimeLocation('hospital').then(()=>showToast('Location updated','Facility position recalibrated.','success'))"><i class="fa-solid fa-location-crosshairs"></i> Recalibrate location</button>` : ''}
       ${currentRole==='police' ? `<button class="profile-menu-logout" style="color:var(--text-main);" onclick="captureOneTimeLocation('police').then(()=>showToast('Location updated','Station position recalibrated.','success'))"><i class="fa-solid fa-location-crosshairs"></i> Recalibrate location</button>` : ''}
@@ -46,6 +47,7 @@ function renderProfileMenu(){
     </div>`;
 }
 function logout(silent){
+  if(typeof abdmResetViewState==='function') abdmResetViewState();
   cycSessionUnlocked = false; // re-lock Women's Health so the next person to open this device must re-enter the PIN
   if(liveTrackingTimer){ clearInterval(liveTrackingTimer); liveTrackingTimer=null; }
   stopDeliveryBoyLiveTracking(); // stop listening to a tracked delivery boy's live-position doc
