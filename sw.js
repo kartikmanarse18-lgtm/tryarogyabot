@@ -20,7 +20,7 @@
    subpath on a *project* site (username.github.io/repo-name/). This
    file only ever uses relative paths for that same reason.
    ============================================================ */
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = 'arogyabot-shell-' + CACHE_VERSION;
 
 // Precached at install time. Keep this list to the actual app shell —
@@ -167,14 +167,20 @@ self.addEventListener('fetch', (event) => {
   // latest deployed version when online, but the installed app still opens
   // — showing the last-cached shell — with no network at all.
   if (url.origin === self.location.origin) {
+    // Network-first, but give up after 4s so a weak/"connected but dead" signal
+    // falls back to the cached copy instead of hanging on a blank screen.
+    const net = fetch(req).then(res => {
+      if (res && res.status === 200) {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+      }
+      return res;
+    });
+    const timeout = new Promise(resolve => setTimeout(() => resolve(null), 4000));
+    const fromCache = () => caches.match(req).then(c => c || caches.match('./index.html'));
     event.respondWith(
-      fetch(req)
-        .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req).then(cached => cached || caches.match('./index.html')))
+      Promise.race([net.catch(() => null), timeout])
+        .then(res => res || fromCache().then(c => c || net))
     );
     return;
   }
