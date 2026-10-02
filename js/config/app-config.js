@@ -28,3 +28,13 @@ const ADMIN_PASSCODE = 'admin123';
 const AI_BACKEND_URL = 'https://arogyabot-ai.kritzaararogyabot.workers.dev';
 
 const ADMIN_SECRET_PHRASE = 'opsdesk';
+
+/* ---------- Native (Android) app ---------- */
+// True only inside the Capacitor app shell, never in a normal browser/PWA.
+const IS_NATIVE_APP = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform==='function' && window.Capacitor.isNativePlatform());
+// Remote push (FCM). Leave FALSE until android/app/google-services.json exists —
+// registering for push without it crashes the Android app. See NATIVE_APP.md, step 3.
+const NATIVE_PUSH_ENABLED = false;
+// URL of your deployed push Worker (worker/push-worker.js), e.g. 'https://arogyabot-push.<you>.workers.dev'.
+// Empty = remote push relay off (reminders + in-app alerts still work).
+const PUSH_WORKER_URL = '';
