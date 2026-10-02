@@ -21,11 +21,15 @@
    ============================================================ */
 function medReminderNotifBannerHTML(){
   const perm = notifPermission();
-  if(perm==='granted') return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;color:var(--brand-primary);font-size:.82rem;"><i class="fa-solid fa-circle-check"></i> Notifications enabled — you'll be alerted with a sound when a dose is due.</div>`;
+  if(perm==='granted'){
+    const exactBtn = (IS_NATIVE_APP && window.__nativeExactAlarm && window.__nativeExactAlarm!=='granted' && window.__nativeExactAlarm!=='unknown')
+      ? ` <button class="btn btn-sm btn-secondary" style="margin-left:6px;" onclick="nativeAllowExactAlarms()"><i class="fa-solid fa-clock"></i> Allow on-the-minute alarms</button>` : '';
+    return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;color:var(--brand-primary);font-size:.82rem;"><span><i class="fa-solid fa-circle-check"></i> Notifications enabled — you'll be alerted when a dose is due${IS_NATIVE_APP?', even if the app is closed':''}.</span>${exactBtn}</div>`;
+  }
   if(perm==='unsupported') return '';
   const blocked = perm==='denied';
   return `<div class="reminder-row" style="background:rgba(13,148,136,.08);border:1px solid rgba(13,148,136,.3);border-radius:10px;padding:10px 12px;margin-bottom:14px;">
-    <div style="font-size:.82rem;"><i class="fa-solid fa-bell" style="color:var(--brand-primary);"></i> ${blocked ? 'Notifications are blocked for this site — enable them in your browser\'s site settings to get dose alerts.' : 'Turn on notifications so a reminder can alert you with a sound at dose time.'}</div>
+    <div style="font-size:.82rem;"><i class="fa-solid fa-bell" style="color:var(--brand-primary);"></i> ${blocked ? (IS_NATIVE_APP ? 'Notifications are blocked — turn them on in Android Settings ➜ Apps ➜ ArogyaBot ➜ Notifications to get dose alerts.' : 'Notifications are blocked for this site — enable them in your browser\'s site settings to get dose alerts.') : 'Turn on notifications so a reminder can alert you with a sound at dose time.'}</div>
     ${blocked ? '' : `<button class="btn btn-sm" onclick="requestNotifPermission()"><i class="fa-solid fa-bell"></i> Enable notifications</button>`}
   </div>`;
 }
