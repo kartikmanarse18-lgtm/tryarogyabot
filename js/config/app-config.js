@@ -23,11 +23,12 @@ const EMAILJS_CONFIG = {
   templateId: "template_ct512x4"
 };
 
-const ADMIN_PASSCODE = 'admin123';
+/* ADMIN_PASSCODE removed on purpose: it is now a server-side secret in the admin worker (see /admin/login). */
 
 const AI_BACKEND_URL = 'https://arogyabot-ai.kritzaararogyabot.workers.dev';
 
-const ADMIN_SECRET_PHRASE = 'opsdesk';
+// Public, harmless: only reveals the admin login box. The real secrets (staff phrase + passcode) live in the admin worker.
+const ADMIN_DOOR_WORD = 'staffdesk';
 
 /* ---------- Native (Android) app ---------- */
 // True only inside the Capacitor app shell, never in a normal browser/PWA.
