@@ -10,7 +10,7 @@ ABDM_MODE = "mock"
 # Comma-separated origins allowed to call this Worker from a browser.
 ALLOWED_ORIGINS = "https://kartikmanarse18-lgtm.github.io,http://localhost:8080,https://localhost,capacitor://localhost"
 
-# KV namespace for short-lived transaction ids (create with: wrangler kv namespace create ABDM_KV)
+# KV namespace for short-lived transaction ids (ABHA) and the DigiLocker consent state/session (create with: wrangler kv namespace create ABDM_KV)
 # [[kv_namespaces]]
 # binding = "ABDM_KV"
 # id = "<paste id here>"
