@@ -16,6 +16,7 @@ function viewPatientDocuments(){
   const docs = (db('documents')||[]).filter(d=>d.ownerId===currentPatientId()).slice().sort((a,b)=>b.uploadedAt-a.uploadedAt);
   return `${viewHeader('My Documents','Insurance papers &amp; medical history','Upload insurance cards, discharge summaries, or old medical history so they\'re on hand if you ever need them in an emergency.')}
   ${officialLinksCardHTML(['digilocker','abha'],'Get documents from official sources')}
+  ${typeof digilockerCardHTML==='function' ? digilockerCardHTML() : ''}
   <div class="card">
     <h3 style="margin-top:0;">Upload a document</h3>
     <div class="form-group"><label>Document type</label>
@@ -38,7 +39,7 @@ function viewPatientDocuments(){
         <div class="doc-row-icon"><i class="fa-solid ${DOC_CATEGORIES[d.category]?.icon||'fa-file'}"></i></div>
         <div>
           <div class="doc-row-name">${docEsc(d.name)}</div>
-          <div class="doc-row-meta">${DOC_CATEGORIES[d.category]?.label||'Other'} · ${d.sizeKB} KB · ${fmtTime(d.uploadedAt)}${d.storagePath?' · Cloud':''}</div>
+          <div class="doc-row-meta">${DOC_CATEGORIES[d.category]?.label||'Other'} · ${d.sizeKB} KB · ${fmtTime(d.uploadedAt)}${d.storagePath?' · Cloud':''}${d.source==='digilocker'?' · DigiLocker':''}</div>
         </div>
         <div class="doc-row-actions">
           ${d.storagePath ? `<button class="btn btn-secondary btn-sm" onclick="docOpenFromStorage('${d.id}')" title="Open"><i class="fa-solid fa-download"></i></button>` : `<a class="btn btn-secondary btn-sm" href="${d.dataUrl}" download="${docEsc(d.name)}"><i class="fa-solid fa-download"></i></a>`}
