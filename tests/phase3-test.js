@@ -97,7 +97,7 @@ const docs=w=>w.eval("db('documents')||[]");
   ok('storage.rules: updates denied, no blanket allow',/allow update:\s*if false/.test(rules)&&!/allow (read|write)[^;]*:\s*if true/.test(rules)&&!/\{allPaths=\*\*\}/.test(rules));
   const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8'),idx=fs.readFileSync(path.join(root,'index.html'),'utf8');
   ok('sw.js never intercepts Storage hosts',/'firebasestorage\.googleapis\.com'/.test(sw)&&/'storage\.googleapis\.com'/.test(sw));
-  ok('sw.js caches doc-storage.js and cache version bumped to v5',sw.includes('./js/services/doc-storage.js')&&/CACHE_VERSION = 'v5'/.test(sw));
+  ok('sw.js caches doc-storage.js and cache version bumped (v5 or newer)',sw.includes('./js/services/doc-storage.js')&&(+((sw.match(/CACHE_VERSION = 'v(\d+)'/)||[])[1]||0))>=5);
   ok('index.html loads storage SDK before app scripts, doc-storage before my-documents',idx.indexOf('firebase-storage-compat.js')>0&&idx.indexOf('firebase-storage-compat.js')<idx.indexOf('js/services/doc-storage.js')&&idx.indexOf('doc-storage.js')<idx.indexOf('my-documents.js')&&idx.indexOf('my-documents.js')<idx.indexOf('js/main.js'));
   console.log(fails?'\n  '+fails+' CHECK(S) FAILED':'\n  ALL PHASE 3 CHECKS PASSED');process.exit(fails?1:0);
 })();
