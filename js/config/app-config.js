@@ -42,6 +42,7 @@ const NATIVE_PUSH_ENABLED = false;
    Secrets (ABDM client id/secret etc.) NEVER go in this file; they live in the arogyabot-abdm Worker. */
 const ABDM_ENABLED = false;
 const DIGILOCKER_ENABLED = false;
+const DOCS_STORAGE_ENABLED = false;  // Phase 3: new document uploads go to Firebase Storage (needs Blaze plan + storage.rules published)
 const ABDM_ENV = 'sandbox';          // 'sandbox' | 'production'
 const ABDM_WORKER_URL = '';          // set when the arogyabot-abdm Worker is deployed
 
