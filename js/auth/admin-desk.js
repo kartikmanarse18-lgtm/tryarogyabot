@@ -23,7 +23,8 @@ function renderAdminScreen(){
     box.innerHTML = `
       <button class="btn-secondary btn-sm" style="margin-bottom:14px;" onclick="backToRoleSelectFromAdmin()"><i class="fa-solid fa-arrow-left"></i> Back</button>
       <h3>Admin access</h3>
-      <p style="color:var(--text-muted, #94a3b8);">Restricted — enter the staff passcode.</p>
+      <p style="color:var(--text-muted, #94a3b8);">Restricted — enter the staff phrase and passcode.</p>
+      <div class="form-group"><input type="password" class="dark-input" id="admin-phrase" placeholder="Staff phrase" autocomplete="off"></div>
       <div class="form-group"><input type="password" class="dark-input" id="admin-pass" placeholder="Passcode" autocomplete="off"></div>
       <button class="btn btn-block" onclick="adminUnlock()">Unlock</button>`;
     return;
@@ -198,21 +199,41 @@ async function adminSendReset(email){
   }
   showToast('Local demo mode', 'Firebase Authentication isn\'t connected — ask the user to use "Forgot password" on the login screen instead.', 'danger');
 }
-// Change this before using the admin desk anywhere but a local demo — a
-// hardcoded client-side passcode is obscurity, not real security, since
-// anyone can read it out of this file's source. For production, swap this
-// for a real check against Firebase Auth (e.g. an allow-listed admin email).
-/* ADMIN_PASSCODE → moved to js/config/app-config.js */
+// The staff phrase and passcode are NOT in this file or in app-config.js. They live only as Cloudflare
+// secrets (ADMIN_PHRASE, ADMIN_PASSCODE) in the admin worker, which checks what you type and, if both are
+// correct, returns a Firebase sign-in token carrying an admin claim.
 let adminFailCount = 0;
 let adminLockUntil = 0;
-function adminUnlock(){
+async function adminUnlock(){
   if(Date.now() < adminLockUntil){
     const secs = Math.ceil((adminLockUntil-Date.now())/1000);
     showToast('Too many attempts', 'Locked for '+secs+'s — try again shortly.', 'danger');
     return;
   }
   const pass = document.getElementById('admin-pass').value;
-  if(pass!==ADMIN_PASSCODE){
+  const phrase = document.getElementById('admin-phrase').value;
+  if(!pass || !phrase){ showToast('Enter the phrase and the passcode', '', 'danger'); return; }
+
+  let data = null, status = 0;
+  try{
+    const res = await fetch(`${ADMIN_WORKER_URL}/admin/login`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ phrase: phrase, passcode: pass })
+    });
+    status = res.status;
+    data = await res.json().catch(()=>({}));
+  }catch(e){
+    showToast('Admin server unreachable', 'Check your internet connection and try again.', 'danger');
+    return;
+  }
+
+  if(status===429){
+    adminLockUntil = Date.now()+60000;
+    showToast('Too many attempts', 'Locked. Try again in a few minutes.', 'danger');
+    return;
+  }
+  if(status!==200 || !data || !data.customToken){
     adminFailCount++;
     audit('admin', 'unlock_failed', 'attempt #'+adminFailCount);
     if(adminFailCount>=5){
@@ -220,40 +241,27 @@ function adminUnlock(){
       adminFailCount = 0;
       showToast('Too many attempts', 'Locked for 30s.', 'danger');
     } else {
-      showToast('Wrong passcode', '', 'danger');
+      showToast(status===403 ? 'Not allowed from this address' : 'Wrong phrase or passcode', '', 'danger');
     }
     return;
   }
+
   adminFailCount = 0;
   adminUnlocked = true;
-  // BUGFIX: this passcode check is purely local — it never signed the admin
-  // into Firebase, so firebase.auth().currentUser stayed null for the whole
-  // admin session. Every Firestore rule in this project gates writes on
-  // signedIn() (request.auth != null), so every admin-initiated write —
-  // adminDeleteUser()'s account-doc delete included — was silently rejected
-  // (the .catch() on that write just logs a console warning, nothing visible
-  // here). Locally the record still vanished, because dbSet() always updates
-  // LOCAL_CACHE/localStorage first regardless of whether the remote write
-  // succeeds — so the admin's own screen looked correct while the Firestore
-  // doc, and every other device's copy of it, sat untouched. Signing in
-  // anonymously gives this session a real request.auth, clearing the same
-  // bar every other role already clears via its own login — no dedicated
-  // admin Firebase Auth account or custom claims needed. Requires Anonymous
-  // sign-in to be turned on for this project under Firebase Console →
-  // Authentication → Sign-in method; if it isn't, this fails safely (admin
-  // desk still works, but stays local-only exactly as before) and now says so
-  // instead of failing silently.
+  // Sign in to Firebase as the verified admin (replaces the old anonymous sign-in), so admin writes
+  // reach Firestore and rules can recognise request.auth.token.admin == true.
   const fa = fbAuth();
-  if(fa && !fa.currentUser){
-    fa.signInAnonymously().then(()=>{
-      audit('admin', 'unlock_success', 'signed in (anonymous)');
-    }).catch(e=>{
-      console.warn('Admin anonymous sign-in failed — admin writes will stay local-only until this succeeds.', e);
-      showToast('Admin sync not connected', 'Enable Anonymous sign-in in Firebase Console → Authentication, or deletes/edits here won\'t reach other devices.', 'danger');
-      audit('admin', 'unlock_success', 'local-only — anonymous sign-in failed: '+(e.code||e.message||e));
-    });
+  if(fa){
+    try{
+      await fa.signInWithCustomToken(data.customToken);
+      audit('admin', 'unlock_success', 'signed in (admin token)');
+    }catch(e){
+      console.warn('Admin sign-in with custom token failed — admin writes may stay local-only.', e);
+      showToast('Admin sync not connected', 'Signed in to the desk, but Firebase sign-in failed ('+(e.code||e.message||e)+').', 'danger');
+      audit('admin', 'unlock_success', 'local-only — custom token sign-in failed: '+(e.code||e.message||e));
+    }
   } else {
-    audit('admin', 'unlock_success', fa && fa.currentUser ? 'already signed in' : 'local demo mode — no Firebase connected');
+    audit('admin', 'unlock_success', 'local demo mode — no Firebase connected');
   }
   renderAdminScreen();
 }
