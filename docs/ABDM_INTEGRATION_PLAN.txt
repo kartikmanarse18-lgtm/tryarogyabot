@@ -1,7 +1,7 @@
 # ArogyaBot — Government Health-Ecosystem Integration Plan
 
 **Covers:** ABHA / ABDM (health records & consent), DigiLocker (documents), Government schemes
-**Status:** Draft v1.3 · 2 Oct 2026 · Owner: ArogyaBot team · **Phase 1 done; Phase 0 decisions recorded (Appendix G); Phase 2 code complete in mock mode (Appendix H), awaiting ABDM sandbox credentials; Phase 3 code complete, awaiting Storage setup (Appendix I)**
+**Status:** Draft v1.4 · 2 Oct 2026 · Owner: ArogyaBot team · **Phase 1 done; Phase 0 decisions recorded (Appendix G); Phase 2 code complete in mock mode (Appendix H), awaiting ABDM sandbox credentials; Phase 3 code complete, awaiting Storage setup (Appendix I); Phase 4 code complete in mock mode, awaiting DigiLocker Requester approval (Appendix J)**
 **Repo this plan applies to:** `kartikmanarse18-lgtm/tryarogyabot` (web/PWA + Android app) and the Cloudflare SOS Worker
 
 > **Golden rule (owner decision, 2 Oct 2026): nothing old is removed or replaced until the new flow is completely ready, tested and approved by the owner.** Every "remove / stop / retire / replace" line in this plan is therefore **deferred to Phase 7**. See Appendix D.
@@ -234,6 +234,7 @@ with per-user paths and signed URLs) and keep only metadata + a reference in Fir
 - `digilocker.js` + Worker routes; WebView/redirect prototype first (Risk 4).
 - Fetched documents land in *My Documents* with `source:'digilocker'`.
 - **Exit:** DigiLocker **demo** partner/citizen portals work end-to-end; production approval submitted.
+- **Status (2 Oct 2026):** code complete in **mock mode only** (fake consent page + fake documents); nothing run against DigiLocker or API Setu, so the exit is not claimed. See Appendix J.
 
 ### Phase 5 — Track C: records exchange (8–12 weeks)
 1. **Provider (M2):** structured prescriptions → FHIR → care-context linking (`doctor-console.js`, `hospital.js`, `telemedicine.js`).
@@ -321,6 +322,7 @@ Firestore rules: `firestore.rules` prepared with one **added** rule (`abdm_callb
 | v1.1 | 2 Oct 2026 | Golden rule (additive only) added; Phase 1 marked done; Phase 7 added; risks 10–12 added; section 4.2/4.4 reworded as additive; decisions table updated (Aadhaar field); repo facts corrected (no `firestore.rules`, `sos-worker/`, `native-bridge-test.js`; real line counts); existing Workers listed; rules update recorded |
 | v1.2 | 2 Oct 2026 | Phase 0 decisions recorded (Appendix G, decisions table annotated); Phase 2 built in mock mode (Appendix H, Phase 2 status line); pilot hospital still open |
 | v1.3 | 2 Oct 2026 | Phase 3 built behind a flag (Appendix I); `storage.rules` added; Cloud Storage now needs the Blaze plan (new risk 13); service worker no longer caches Storage hosts |
+| v1.4 | 2 Oct 2026 | Phase 4 built in mock mode behind `DIGILOCKER_ENABLED` (Appendix J); `worker-abdm` config files moved to the Worker root; My Documents crash fix (`docEsc` fallback) |
 
 ## Appendix G — Phase 0 decisions (recorded 2 Oct 2026, by the owner)
 
@@ -362,3 +364,21 @@ Not done / needs the owner:
 3. Old `dataUrl` documents are NOT migrated or removed (Appendix D → Phase 7). They keep the Firestore size limit.
 4. Hospital/doctor views cannot open Storage-based documents (their shared snapshot has no file data, same as today's >180 KB case). Sharing goes through the consent flow in Phase 5.
 5. Not covered by Phase 3: deleting a user's account does not yet delete their Storage files (admin Worker task; add before real patients).
+
+## Appendix J — Phase 4 status (2 Oct 2026) — CODE COMPLETE, MOCK MODE ONLY
+
+Added (all behind `DIGILOCKER_ENABLED`, default off; nothing old removed; with the flag off the app behaves as before):
+- `worker-abdm/src/digilocker.js` — adapter. `ABDM_MODE="mock"` serves a fake consent page and two clearly labelled TEST documents. **`sandbox` / `production` return 501 on purpose**: the authorize/token/list/fetch calls, any PKCE requirement, token lifetime and the document URI format must be filled in from the official DigiLocker Requester API specification and API Setu documentation once the Requester application is approved.
+- `worker-abdm/src/index.js` — routes: `POST /digilocker/start`, `GET /digilocker/status`, `GET /digilocker/documents`, `POST /digilocker/fetch`, `POST /digilocker/disconnect` (all verify the Firebase ID token), plus two public browser-redirect legs `GET /digilocker/callback` and (mock only) `GET /digilocker/mock-authorize`.
+- Security design: the redirect is bound to a user by a random, single-use `state` held server-side for 10 minutes (replaying the callback does nothing); the DigiLocker session stays in the Worker (KV) and is never sent to the app; the HTML pages have no scripts, `no-store`, `no-referrer` and a locked-down CSP; fetched files must be PDF or image and at most 5 MB; the app only receives metadata and the file the patient chose.
+- `js/services/digilocker.js` — client plus the "Fetch from DigiLocker" card at the top of My Documents (Connect → consent in a new tab → app polls for up to 3 minutes → list → Import). Imports are tagged `source:'digilocker'`, `externalId`, `fetchedAt`, are de-duplicated per family member, and go to Firebase Storage when `DOCS_STORAGE_ENABLED` is on, otherwise to the old `dataUrl` path (limited to 500 KB because the whole list is one Firestore document).
+- Small additive edits: `my-documents.js` (card + "DigiLocker" badge), `family-members.js` and `profile-menu.js` (reset on member switch / logout), `index.html`, `sw.js` (cache v6), `tests/package.json`; `tests/phase3-test.js` now accepts cache v5 or newer.
+- `tests/phase4-test.js` — 59 checks, including an end-to-end run where the app's fetch is wired into the real Worker code. Full `npm test` passes (165 checks).
+
+Not done / needs the owner:
+1. Apply for **DigiLocker Requester** access on API Setu (approval time is outside our control). Until then the real adapter cannot be written or tested.
+2. Deploy the Worker with a **KV namespace** (required outside mock mode; the mock fallback is in-memory and not durable across Worker instances) and set `ABDM_WORKER_URL`; flip `DIGILOCKER_ENABLED=true` in a test build only. Do not enable mock mode for real patients.
+3. **Real-device check (Risk 4):** the consent step opens in a new tab via `window.open`. Inside the Android WebView this may be blocked or open in the wrong place; `@capacitor/browser` and a return deep link may be needed. Not tested on a device.
+4. After the real adapter exists: confirm the document URI format (the Worker currently accepts only letters, digits, `: . _ -`), the consent screen wording, rate limiting, and add the DigiLocker callback host to the privacy policy.
+5. Deleting a user's account does not yet delete their DigiLocker session or imported Storage files (admin Worker task; same gap as Appendix I item 5).
+6. Imported documents are visible only to the patient. Sharing with a hospital goes through the consent flow in Phase 5.
