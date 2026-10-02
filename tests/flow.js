@@ -12,6 +12,6 @@ for(let i=0;i<badges.length;i++){
   const card=(d.getElementById('auth-card-box')||{}).innerHTML||'';
   out.push(`${badges[i].textContent.trim().replace(/\s+/g,' ').slice(0,28)} → ${shown||'none'} (${card.length}b)`);}
 // admin gate via secret hash
-w.location.hash='#opsdesk';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await new Promise(r=>setTimeout(r,300));
+w.location.hash='#staffdesk';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await new Promise(r=>setTimeout(r,300));
 out.push('admin gate visible: '+!d.getElementById('screen-admin').classList.contains('hidden'));
 console.log(process.argv[2]+'\n  '+out.join('\n  ')+'\n  errors: '+JSON.stringify([...new Set(errs)]));process.exit(0)})();
