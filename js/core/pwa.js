@@ -8,7 +8,9 @@
    file opened straight from disk, where the API doesn't exist at all)
    just silently skips this instead of throwing.
    ============================================================ */
-if('serviceWorker' in navigator){
+// Inside the Android app the files ship inside the APK, so a service worker would only
+// get in the way (and would cache stale copies after an app update).
+if('serviceWorker' in navigator && !IS_NATIVE_APP){
   window.addEventListener('load', ()=>{
     navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('Service worker registration failed', e));
   });
