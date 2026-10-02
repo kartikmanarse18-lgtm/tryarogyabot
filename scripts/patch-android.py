@@ -60,7 +60,7 @@ def gradle(s):
     if 'KEYSTORE_PATH' in s:
         return s
     s = s.replace('versionCode 1\n        versionName "1.0"',
-                  'versionCode (System.getenv("VERSION_CODE") ?: "1").toInteger()\n        versionName (System.getenv("VERSION_NAME") ?: "0.1.0")')
+                  'versionCode Integer.parseInt(System.getenv("VERSION_CODE") ?: "1")\n        versionName System.getenv("VERSION_NAME") ?: "0.1.0"')
     s = s.replace('''    buildTypes {
         release {
             minifyEnabled false''', '''    signingConfigs {
