@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// ArogyaBot — Cloud Storage rules (plan Phase 3). NEW file; Firestore rules are separate and unchanged.
+// Publish in: Firebase Console -> Storage -> Rules. Back up whatever is there first.
+// Each signed-in user can only touch files under their OWN auth uid. Everything else is denied (no default allow).
+// Doctors/hospitals cannot read patient files through Storage; sharing goes through the consent flow (Phase 5).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{uid}/documents/{docId}/{fileName} {
+      allow read:   if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+                    && request.resource.size > 0
+                    && request.resource.size < 10 * 1024 * 1024
+                    && request.resource.contentType.matches('application/pdf|image/.*');
+      allow update: if false;   // objects are write-once; ids are unique per upload
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
