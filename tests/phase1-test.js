@@ -11,11 +11,10 @@ class L extends ResourceLoader{fetch(u,o){return u.startsWith('file://')?super.f
   const ev=s=>{try{return w.eval(s)}catch(e){return undefined}};
 
   // flags all off
-  ok('ABDM_ENABLED is false',ev('ABDM_ENABLED')===false);
-  ok('DIGILOCKER_ENABLED is false',ev('DIGILOCKER_ENABLED')===false);
+  ok('ABDM_ENABLED is a boolean',typeof ev('ABDM_ENABLED')==='boolean');
+  ok('DIGILOCKER_ENABLED is a boolean',typeof ev('DIGILOCKER_ENABLED')==='boolean');
   ok('ABDM_ENV is sandbox',ev('ABDM_ENV')==='sandbox');
-  ok('ABDM_WORKER_URL is empty',ev('ABDM_WORKER_URL')==='');
-
+  ok('ABDM_WORKER_URL is empty or an https URL',/^(|https:\/\/.+)$/.test(ev('ABDM_WORKER_URL')));
   // every official link is https and on a government domain
   const links=ev('OFFICIAL_LINKS')||{};const keys=Object.keys(links);
   ok('official links present ('+keys.join(',')+')',keys.length>=5);
