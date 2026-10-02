@@ -1,6 +1,11 @@
 /* ============================================================
    PATIENT — MY DOCUMENTS (insurance papers, old history files, etc.)
    ============================================================ */
+// Safety net: docEsc normally comes from js/services/doc-storage.js. If that file is missing,
+// stale-cached or loads late, this screen must still render (old behaviour) instead of crashing.
+if(typeof window.docEsc!=='function'){
+  window.docEsc = function(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); };
+}
 const DOC_CATEGORIES = {
   insurance: {label:'Insurance', icon:'fa-file-shield'},
   history:   {label:'Medical History', icon:'fa-file-waveform'},
