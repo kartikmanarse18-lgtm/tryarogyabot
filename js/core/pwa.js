@@ -8,9 +8,9 @@
    file opened straight from disk, where the API doesn't exist at all)
    just silently skips this instead of throwing.
    ============================================================ */
-// Inside the Android app the files ship inside the APK, so a service worker would only
-// get in the way (and would cache stale copies after an app update).
-if('serviceWorker' in navigator && !IS_NATIVE_APP){
+// The Android app loads the live website (capacitor server.url), so the service worker runs there too:
+// online = always the latest deployed version, offline = the last copy it cached.
+if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
     navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('Service worker registration failed', e));
   });
