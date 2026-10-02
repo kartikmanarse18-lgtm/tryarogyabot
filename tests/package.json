@@ -2,7 +2,7 @@
   "name": "arogyabot-tests",
   "private": true,
   "scripts": {
-    "test": "node smoke.js .. && node flow.js .."
+    "test": "node smoke.js .. && node flow.js .. && node phase1-test.js .."
   },
   "devDependencies": { "jsdom": "^24.0.0" }
 }
