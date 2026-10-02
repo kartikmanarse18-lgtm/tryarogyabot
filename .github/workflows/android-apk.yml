@@ -29,6 +29,18 @@ jobs:
       - name: Build web assets
         run: npm run build:web
 
+      # LIVE UPDATES: the app loads your website (GitHub Pages) instead of a bundled copy, so anything you
+      # commit to the repo shows up for users automatically. Default URL = https://<owner>.github.io/<repo>/
+      # Custom domain or different URL? Add a repo VARIABLE named APP_URL (Settings > Secrets and variables > Actions > Variables).
+      - name: Point the app at the live website
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          OWNER=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+          URL="${APP_URL:-https://$OWNER.github.io/${{ github.event.repository.name }}/}"
+          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));c.server={url:process.argv[1],cleartext:false};fs.writeFileSync('capacitor.config.json',JSON.stringify(c,null,2));" "$URL"
+          echo "App will load from: $URL"
+
       # The android/ folder is not stored in git — it is generated fresh every build,
       # then ArogyaBot's manifest/permissions/signing/icons are applied on top.
       - name: Generate Android project
