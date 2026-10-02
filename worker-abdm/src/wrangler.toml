@@ -1,0 +1,18 @@
+name = "arogyabot-abdm"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+FIREBASE_PROJECT_ID = "kritzaararogyabot"
+# "mock" = fake ABHA responses, no ABDM credentials needed (for building/testing the app).
+# "sandbox" / "production" = real gateway (needs the secrets below AND src/gateway.js confirmed against ABDM docs).
+ABDM_MODE = "mock"
+# Comma-separated origins allowed to call this Worker from a browser.
+ALLOWED_ORIGINS = "https://kartikmanarse18-lgtm.github.io,http://localhost:8080,https://localhost,capacitor://localhost"
+
+# KV namespace for short-lived transaction ids (create with: wrangler kv namespace create ABDM_KV)
+# [[kv_namespaces]]
+# binding = "ABDM_KV"
+# id = "<paste id here>"
+
+# Secrets (never in this file):  wrangler secret put ABDM_CLIENT_ID / ABDM_CLIENT_SECRET
