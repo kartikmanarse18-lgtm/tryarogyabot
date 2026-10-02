@@ -1,7 +1,7 @@
 # ArogyaBot — Government Health-Ecosystem Integration Plan
 
 **Covers:** ABHA / ABDM (health records & consent), DigiLocker (documents), Government schemes
-**Status:** Draft v1.2 · 2 Oct 2026 · Owner: ArogyaBot team · **Phase 1 done; Phase 0 decisions recorded (Appendix G); Phase 2 code complete in mock mode (Appendix H), awaiting ABDM sandbox credentials**
+**Status:** Draft v1.3 · 2 Oct 2026 · Owner: ArogyaBot team · **Phase 1 done; Phase 0 decisions recorded (Appendix G); Phase 2 code complete in mock mode (Appendix H), awaiting ABDM sandbox credentials; Phase 3 code complete, awaiting Storage setup (Appendix I)**
 **Repo this plan applies to:** `kartikmanarse18-lgtm/tryarogyabot` (web/PWA + Android app) and the Cloudflare SOS Worker
 
 > **Golden rule (owner decision, 2 Oct 2026): nothing old is removed or replaced until the new flow is completely ready, tested and approved by the owner.** Every "remove / stop / retire / replace" line in this plan is therefore **deferred to Phase 7**. See Appendix D.
@@ -195,6 +195,7 @@ with per-user paths and signed URLs) and keep only metadata + a reference in Fir
 | 9 | Production access depends on third parties' timelines, not ours. | Treat production go-live as a separate milestone; the app stays fully usable without it. |
 | 10 | **Because the old Aadhaar structure stays until Phase 7**, Aadhaar-keyed snapshots and all account records remain readable by any signed-in user under the current Firestore rules (no per-role claims exist). | Keep the app to a **trusted-user pilot** until Phase 7; do not onboard real patients on this basis. Revisit and tighten rules in Phase 7 once doctors are on Firebase Auth. |
 | 11 | **Repo gaps found on 2 Oct 2026:** no `firestore.rules`, no `sos-worker/` folder, no `native-bridge-test.js`; the SOS and admin Workers live only on the owner's PC. | Put each Worker in its own repo folder (or repo) and keep `firestore.rules` in the repo root before Phase 2 starts. |
+| 13 | **Cloud Storage for Firebase needs the pay-as-you-go Blaze plan** (since 3 Feb 2026, even for tiny usage; per Firebase's own FAQ and a pricing guide found 2 Oct 2026, to be re-confirmed in your console). The project's bucket name (`...firebasestorage.app`) suggests it may already be provisioned. | Check Firebase Console → Usage and billing. If the owner does not want a billing account, keep `DOCS_STORAGE_ENABLED` off (the app keeps working with the old path) or revisit the storage decision (e.g. Cloudflare R2; its pricing/terms are **not verified**). |
 | 12 | The admin Worker holds a full-access Firebase service-account key (as a Cloudflare secret). The ABDM Worker will hold ABDM secrets too. | Keep secrets only in `wrangler secret`; never in the repo; rotate if ever exposed. The admin passcode and phrase are now checked server-side (done 2 Oct 2026). |
 
 ---
@@ -227,6 +228,7 @@ with per-user paths and signed URLs) and keep only metadata + a reference in Fir
 ### Phase 3 — Document storage migration (1–2 weeks, can overlap Phase 2)
 - Move *My Documents* binaries to object storage; migrate existing `dataUrl` docs; update `sw.js`/rules.
 - **Exit:** 10 MB PDF uploads, syncs across two phones, appears on both.
+- **Status (2 Oct 2026):** new-upload path built behind `DOCS_STORAGE_ENABLED` (off). Not yet tested on real Firebase Storage or two phones. Migration of old `dataUrl` documents deferred to Phase 7 (golden rule). See Appendix I.
 
 ### Phase 4 — Track D: DigiLocker (2–3 weeks, parallel)
 - `digilocker.js` + Worker routes; WebView/redirect prototype first (Risk 4).
@@ -318,6 +320,7 @@ Firestore rules: `firestore.rules` prepared with one **added** rule (`abdm_callb
 | v1 | 2 Oct 2026 | First draft |
 | v1.1 | 2 Oct 2026 | Golden rule (additive only) added; Phase 1 marked done; Phase 7 added; risks 10–12 added; section 4.2/4.4 reworded as additive; decisions table updated (Aadhaar field); repo facts corrected (no `firestore.rules`, `sos-worker/`, `native-bridge-test.js`; real line counts); existing Workers listed; rules update recorded |
 | v1.2 | 2 Oct 2026 | Phase 0 decisions recorded (Appendix G, decisions table annotated); Phase 2 built in mock mode (Appendix H, Phase 2 status line); pilot hospital still open |
+| v1.3 | 2 Oct 2026 | Phase 3 built behind a flag (Appendix I); `storage.rules` added; Cloud Storage now needs the Blaze plan (new risk 13); service worker no longer caches Storage hosts |
 
 ## Appendix G — Phase 0 decisions (recorded 2 Oct 2026, by the owner)
 
@@ -344,3 +347,18 @@ Not done / needs the owner:
 5. Mock-linked ABHAs show "(test data)" in the UI; do not enable mock mode for real patients.
 6. `firestore.rules` (with the `abdm_callbacks` rule) is not live until pasted into the Firebase console and published; back up the old rules first.
 7. Repo note: `docs/ABDM_INTEGRATION_PLAN.txt` in GitHub is the older v1 draft; replace it with this v1.2 file.
+
+## Appendix I — Phase 3 status (2 Oct 2026) — CODE COMPLETE, FLAG OFF
+
+Added (nothing old removed; with the flag off, uploads behave exactly as before):
+- `js/services/doc-storage.js` — new uploads go to Firebase Storage at `users/{authUid}/documents/{docId}/{safeName}`; Firestore keeps only metadata (`storagePath`, `contentType`, `source:'upload'`, `storage:'firebase'`). Limit 10 MB; PDF/images only; download links fetched on demand, never saved; file names HTML-escaped.
+- `storage.rules` (new file) — owner-only read/delete, create limited to 10 MB and PDF/image, updates denied, everything else denied. **Not live until published** in Firebase Console → Storage → Rules.
+- Edited: `js/config/app-config.js` (`DOCS_STORAGE_ENABLED=false`), `js/modules/patient/my-documents.js` (cloud branch, Open button, delete removes the Storage object; list now HTML-escapes file names), `index.html` (Storage SDK + new script), `sw.js` (cache v5; Storage hosts added to the never-intercept list so private documents are not cached on the device), `tests/package.json`.
+- `tests/phase3-test.js` — 38 checks (mock Storage). Full `npm test` passes.
+
+Not done / needs the owner:
+1. Confirm the Blaze plan (risk 13), enable Storage, publish `storage.rules`.
+2. Real-device checks not run: upload from the Android app (and whether `window.open` for download works in the WebView; `@capacitor/browser` may be needed), two-phone sync, a real 10 MB PDF.
+3. Old `dataUrl` documents are NOT migrated or removed (Appendix D → Phase 7). They keep the Firestore size limit.
+4. Hospital/doctor views cannot open Storage-based documents (their shared snapshot has no file data, same as today's >180 KB case). Sharing goes through the consent flow in Phase 5.
+5. Not covered by Phase 3: deleting a user's account does not yet delete their Storage files (admin Worker task; add before real patients).
