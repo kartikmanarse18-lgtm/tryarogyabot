@@ -42,9 +42,9 @@ Cloudflare Durable Object SOS backend. **Real multi-user safety depends on your 
 Security Rules and Worker auth, which live outside this repo** — test them with two real accounts.
 
 ## Security (please read)
-* `ADMIN_PASSCODE = 'admin123'` is in `app-config.js`. Anything in the browser is public — **anyone can
-  read it.** Replace with a real server-side check (e.g. Firebase Auth allow-listed admin email,
-  verified in your admin Worker) before real use.
+* The staff phrase and passcode are **not** in this repo. They are Cloudflare secrets (`ADMIN_PHRASE`, `ADMIN_PASSCODE`)
+  in the admin worker, which checks both on the server (`/admin/login`) and returns a Firebase sign-in token with an
+  admin claim. `ADMIN_DOOR_WORD` in `app-config.js` only shows the login box; it is not a security control.
 * The Firebase `apiKey` and EmailJS public key are designed to be public; their protection is
   Firestore rules / EmailJS domain allow-listing. Confirm both are locked to your domain.
 
