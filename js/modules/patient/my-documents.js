@@ -10,6 +10,7 @@ const DOC_CATEGORIES = {
 function viewPatientDocuments(){
   const docs = (db('documents')||[]).filter(d=>d.ownerId===currentPatientId()).slice().sort((a,b)=>b.uploadedAt-a.uploadedAt);
   return `${viewHeader('My Documents','Insurance papers &amp; medical history','Upload insurance cards, discharge summaries, or old medical history so they\'re on hand if you ever need them in an emergency.')}
+  ${officialLinksCardHTML(['digilocker','abha'],'Get documents from official sources')}
   <div class="card">
     <h3 style="margin-top:0;">Upload a document</h3>
     <div class="form-group"><label>Document type</label>

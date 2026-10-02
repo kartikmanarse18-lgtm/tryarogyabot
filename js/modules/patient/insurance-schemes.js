@@ -2,8 +2,8 @@
    PATIENT — INSURANCE / GOVT SCHEMES
    ============================================================ */
 const SCHEME_CONFIG = {
-  pmjay:   {label:'PM-JAY (Ayushman Bharat)', desc:'Cashless hospitalisation cover up to ₹5,00,000/year per household at empaneled public and private hospitals, for families identified via the SECC database or state extension schemes.', needsPolicyFields:false},
-  cghs:    {label:'CGHS (Central Govt. Health Scheme)', desc:'For serving/retired central government employees and pensioners. Cashless OPD and IPD treatment at CGHS wellness centres and empaneled hospitals, against your CGHS card.', needsPolicyFields:false, extraField:{key:'cghsCategory', label:'CGHS card / beneficiary ID', placeholder:'e.g. CGHS-DL-0123456'}},
+  pmjay:   {label:'PM-JAY (Ayushman Bharat)', desc:'Cashless hospitalisation cover up to ₹5,00,000/year per household at empaneled public and private hospitals, for families identified via the SECC database or state extension schemes. Since October 2024, every citizen aged 70 or above can also get cover through the Ayushman Vay Vandana card, regardless of income.', needsPolicyFields:false},
+  cghs:    {label:'CGHS (Central Govt. Health Scheme)', desc:'For serving/retired central government employees and pensioners. Cashless OPD and IPD treatment at CGHS wellness centres and empaneled hospitals, against your CGHS card. If you are 70 or above, you generally have to choose between CGHS and the Ayushman Vay Vandana card — check with your CGHS wellness centre before switching.', needsPolicyFields:false, extraField:{key:'cghsCategory', label:'CGHS card / beneficiary ID', placeholder:'e.g. CGHS-DL-0123456'}},
   esic:    {label:'ESIC (Employees\' State Insurance)', desc:'For organised-sector employees earning within the ESI wage ceiling and their dependents. Covers medical care, cash benefits during sickness, and maternity benefit.', needsPolicyFields:false, extraField:{key:'esicIpNumber', label:'Insured Person (IP) number', placeholder:'e.g. 1234567890'}},
   state:   {label:'State Government Scheme', desc:'Many states run their own top-up or standalone cashless schemes (e.g. Mahatma Jyotiba Phule Jan Arogya Yojana in Maharashtra) layered on top of or alongside PM-JAY — check with your local health department for your state\'s scheme name and card.', needsPolicyFields:false},
   private: {label:'Private Health Insurance', desc:'A privately purchased or employer-provided policy, settled either cashless (pre-authorised at a network hospital) or by reimbursement after discharge.', needsPolicyFields:true},
@@ -19,6 +19,7 @@ function viewPatientInsurance(){
   const ins = getInsuranceRecord(pid);
   const scheme = SCHEME_CONFIG[ins.scheme] || null;
   return `${viewHeader('Government Schemes &amp; Insurance','Ayushman Bharat / PM-JAY, CGHS, ESIC &amp; private cover','')}
+  ${officialLinksCardHTML(['pmjay','mjpjay','abha','digilocker'],'Official government sites')}
   <div class="card">
     <h3 style="margin-top:0;">Aadhaar-based scheme verification</h3>
     <div class="form-group"><label>Aadhaar Number</label><input class="form-control" id="aadhaar-input-field" maxlength="14" value="${formatAadhaar(db('profile').aadhaarNumber)}" placeholder="XXXX XXXX XXXX" oninput="this.value=formatAadhaar(this.value);"></div>
@@ -35,7 +36,7 @@ function viewPatientInsurance(){
     </div>
     <div id="ins-scheme-extra">${schemeExtraFieldsHTML(ins)}</div>
     <button class="btn btn-secondary btn-sm" onclick="patientSaveSchemeDetails()"><i class="fa-solid fa-floppy-disk"></i> Save scheme details</button>
-    ${scheme ? `<div style="background:var(--bg-subtle);border-radius:12px;padding:12px 14px;margin-top:14px;font-size:.84rem;color:var(--text-muted);">${scheme.desc}</div>` : ''}
+    ${scheme ? `<div style="background:var(--bg-subtle);border-radius:12px;padding:12px 14px;margin-top:14px;font-size:.84rem;color:var(--text-muted);">${scheme.desc}<div style="font-size:.72rem;margin-top:8px;opacity:.85;">Information last reviewed ${OFFICIAL_LINKS_REVIEWED}. Scheme rules change — always confirm on the official site before relying on this.</div></div>` : ''}
   </div>
   <div class="card">
     <h3 style="margin-top:0;">Submit a claim</h3>
