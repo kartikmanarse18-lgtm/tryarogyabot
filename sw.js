@@ -20,7 +20,7 @@
    subpath on a *project* site (username.github.io/repo-name/). This
    file only ever uses relative paths for that same reason.
    ============================================================ */
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = 'arogyabot-shell-' + CACHE_VERSION;
 
 // Precached at install time. Keep this list to the actual app shell —
@@ -80,6 +80,7 @@ const APP_SHELL = [
   './js/modules/patient/medicine-reminder-clock.js',
   './js/modules/patient/my-documents.js',
   './js/modules/patient/abha-health-id.js',
+  './js/services/doc-storage.js',
   './js/services/abdm-client.js',
   './js/modules/patient/nearby-help.js',
   './js/modules/patient/nutrition-tools.js',
@@ -123,6 +124,9 @@ const NEVER_INTERCEPT_HOSTS = [
   'arogyabot-sos.kritzaararogyabot.workers.dev',
   'arogyabot-admin.kritzaararogyabot.workers.dev',
   'firestore.googleapis.com',
+  // Phase 3: private health documents. Never cache Storage responses/download links on the device's shared cache.
+  'firebasestorage.googleapis.com',
+  'storage.googleapis.com',
   'identitytoolkit.googleapis.com',
   'securetoken.googleapis.com',
   'firebaseio.com',
