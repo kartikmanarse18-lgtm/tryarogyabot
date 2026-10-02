@@ -64,6 +64,8 @@ const SIDENAV_HANDOFFS = {
   'h-doctor-login': 'openDoctorLoginFromHospital()',
   'ph-delivery-login': 'openDeliveryLoginFromPharmacy()'
 };
+// ABDM plan, Phase 2: ABHA entry only appears when the flag is on (flag off = nav identical to before).
+if(typeof ABDM_ENABLED!=='undefined' && ABDM_ENABLED===true){ SIDENAV.patient.push({id:'p-abha', label:'ABHA Health ID', icon:'fa-id-card-clip'}); }
 function buildSideNav(role){
   const nav = document.getElementById('app-sidenav');
   let items = SIDENAV[role];

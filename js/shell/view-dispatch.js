@@ -17,7 +17,7 @@ function renderCurrentView(navId){
   const c = document.getElementById('active-view-container');
   const renderers = {
     'p-dash': viewPatientDash, 'p-sos': viewPatientSOS, 'p-chat': viewPatientChat, 'p-history': viewPatientSymptomHistory, 'p-records': viewPatientRecords,
-    'p-tele': viewPatientTele, 'p-rx': viewPatientRx, 'p-pharmacy': viewPatientPharmacy, 'p-fitness': viewPatientFitness, 'p-nutrition': viewPatientNutrition, 'p-vitals': viewPatientVitals, 'p-meds': viewPatientMeds, 'p-lifestyle': viewPatientLifestyle, 'p-women': viewPatientWomen, 'p-insurance': viewPatientInsurance, 'p-documents': viewPatientDocuments,
+    'p-tele': viewPatientTele, 'p-rx': viewPatientRx, 'p-pharmacy': viewPatientPharmacy, 'p-fitness': viewPatientFitness, 'p-nutrition': viewPatientNutrition, 'p-vitals': viewPatientVitals, 'p-meds': viewPatientMeds, 'p-lifestyle': viewPatientLifestyle, 'p-women': viewPatientWomen, 'p-insurance': viewPatientInsurance, 'p-documents': viewPatientDocuments, 'p-abha': viewPatientAbha,
     'r-dash': viewResponderDash, 'r-queue': viewResponderQueue, 'r-active': viewResponderActive,
     'po-dash': viewPoliceDash, 'po-feed': viewPoliceFeed,
     'h-dash': viewHospitalDash, 'h-incoming': viewHospitalIncoming, 'h-roster': viewHospitalRoster, 'h-tele': viewHospitalTele, 'h-verify': viewHospitalVerify, 'h-audit': viewHospitalAudit,
