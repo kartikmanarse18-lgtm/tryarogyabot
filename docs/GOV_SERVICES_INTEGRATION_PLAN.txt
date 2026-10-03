@@ -1,0 +1,386 @@
+# ArogyaBot — Government Health Services: Integrate-or-Redirect Analysis & Phase Plan
+
+**Covers:** e-RaktKosh (blood banks) · U-WIN (vaccination) · eSanjeevani (tele-consult) · Jan Aushadhi (generic medicines) · Ayushman Arogya Mandir · ECHS · myScheme · Tele-MANAS
+**Status:** Draft v1.0 · 3 Oct 2026 · Owner: ArogyaBot team · **Nothing in this plan is built yet except the redirect links and the ECHS/state-scheme screens from the gap-analysis sprint.**
+**Companion to:** `ABDM_INTEGRATION_PLAN.md` (ABHA / DigiLocker / records). This plan does not repeat it; it points to it where ABDM is the route.
+
+**How to read the evidence tags**
+- ✅ = stated on an official government page, a ministry press release or a Parliament answer that I saw during this research.
+- 🟡 = from a secondary, community, commercial or background source. **Verify on the official site before building on it.**
+- ❌ = I searched and did **not** find it. This is a limit of my search, not proof it does not exist. Confirm by asking the owning agency.
+
+---
+
+## 1. Verdict in one table (the answer to "integrate or redirect?")
+
+| Service | Owner (✅ unless marked) | Public API or open data found? | **What is possible** | Verdict |
+|---|---|---|---|---|
+| **e-RaktKosh** (blood banks) | MoHFW / NHM, built by C-DAC | ❌ no public stock API. ✅ A **Blood Bank Directory** open dataset exists (address, geo-location, contact) under the Open Government Licence – India | Show *nearest blood banks* from a dated snapshot. **Never** show stock (stock is live and we cannot get it). Redirect to e-RaktKosh for availability | **Redirect now + snapshot directory.** Live stock only via a partnership request to C-DAC/NHM |
+| **U-WIN** (vaccination) | MoHFW | ❌ no public API | Redirect for registration and the QR certificate. Own immunisation tracker. Records could arrive via ABHA/DigiLocker (to be tested) | **Redirect now. Integrate later through ABDM/DigiLocker.** |
+| **eSanjeevani** (tele-consult) | MoHFW, built by C-DAC Mohali | ❌ no public API. ✅ Already integrated **with ABDM** (ABHA creation, linking and sharing records) | Redirect or in-app browser now. Consultation records can reach us through ABHA with patient consent | **Redirect now. Integrate through ABDM consent (HIU).** Embedded login only by partnership |
+| **Jan Aushadhi** (PMBJP) | Dept. of Pharmaceuticals; run by PMBI | ❌ no store-level API. ✅ Official **Sugam app** locates kendras, searches generics, compares prices. Open data only has aggregate counts | Redirect now. A "generic alternative" finder **needs PMBI's product and store data (permission)** | **Redirect now. Integrate only with PMBI's agreement.** Never scrape |
+| **Ayushman Arogya Mandir** | MoHFW / NHM | ❌ no citizen locator found. The `ab-hwc` portal is the states' reporting portal | Plain guidance (ASHA worker / PHC) now. Facility discovery later via the **ABDM Health Facility Registry** | **No link now. Integrate via HFR.** |
+| **ECHS** | Ministry of Defence (DESW) | ❌ no public API. 🟡 There is an official **ECHS Beneficiary App** (card status, polyclinic contacts, referrals) | Redirect. Our own referral tracker, masked card, emergency note (done). Directories only with DESW/ECHS permission | **Redirect + own features.** Data partnership optional |
+| **myScheme** | NeGD / MeitY | ✅ Listed on **API Setu** as a *Service API* (non-user data). Consumer registers, subscribes, publisher approves | Replace our hand-curated state table with live scheme data | **Integrate (apply now).** Best candidate in this plan |
+| **Tele-MANAS 14416** | MoHFW | n/a | Tap-to-call (done) | **Call link only** |
+
+**Why this matters:** only **one** service here (myScheme) has a documented route to a real API. Two more (eSanjeevani, U-WIN) reach us through ABDM consent, which is already blocked on sandbox credentials. The rest are redirect-plus-own-features, with open-data snapshots where a licensed dataset exists. Promising more would mean guessing.
+
+---
+
+## 2. Corrections and confirmations from the owner (3 Oct 2026)
+
+| Item | Owner said | What changed |
+|---|---|---|
+| `eraktkosh.mohfw.gov.in` | Correct | Kept |
+| `uwin.mohfw.gov.in` | Correct | Kept |
+| `esanjeevani.mohfw.gov.in` | Correct | Kept |
+| `janaushadhi.gov.in` | Correct | Kept |
+| `ab-hwc.nhp.gov.in` (Arogya Mandir) | **Not a citizen site** | ✅ **Removed from the app** (code + tests updated). Replaced by plain text: ask your ASHA worker or local PHC. Supports the owner: a Tribune report says states upload photos to the AB-HWC portal ✅ |
+| `echs.gov.in` | (confirmed on the DESW site ✅) | Kept |
+| `myscheme.gov.in` | Not yet confirmed by owner | Still open — click-test before release |
+
+**Working rule going forward:** an external link goes into `OFFICIAL_LINKS` only after someone opens it and confirms it is the citizen-facing official page. Phase S1 adds a script that makes this checkable.
+
+---
+
+## 3. Integration levels (used throughout this plan)
+
+| Level | Meaning | Needs credentials? | Can ship now? |
+|---|---|---|---|
+| **L0 Redirect** | Open the official site in the browser | No | ✅ |
+| **L1 Hand-off** | `tel:` call, official app deep link, in-app browser with a clear exit | No | ✅ |
+| **L2 Snapshot** | We hold a *dated copy* of open data (e.g. blood-bank directory) and show it with "last reviewed" | Only an OGD API key / licence check | ✅ after licence check |
+| **L3 Live API** | We call a government API (e.g. myScheme via API Setu) | **Yes** — registration and approval | ⏳ waits for approval |
+| **L4 Records via consent** | Patient records fetched through ABDM (HIU role) | **Yes** — ABDM sandbox → production | ⏳ waits for ABDM |
+
+**Rules that apply to every phase (carried over from the ABDM plan)**
+1. **Additive only.** New files and flagged branches. Nothing old is removed without owner approval.
+2. **Every feature has a flag that defaults to off.** New flags: `GOV_FINDERS_ENABLED`, `MYSCHEME_ENABLED`, `VACCINE_TRACKER_ENABLED`, `GENERIC_FINDER_ENABLED`, `ESANJEEVANI_EMBED_ENABLED`.
+3. **Mock mode first.** Every L3/L4 adapter works against fake data until credentials arrive, exactly as ABHA and DigiLocker do today. Mock data is labelled "(test data)" in the UI.
+4. **No scraping.** If a service has no public API or open licence, we ask the owning agency or we redirect. We do not copy pages.
+5. **Every snapshot carries `source`, `fetchedAt` and `lastReviewed`, shown to the patient.** A human reviews each data refresh before it goes live (see §5).
+6. **Emergency flows never depend on an external site.** SOS must work with every integration down.
+7. **Safety text on health data:** blood-bank and clinic information can be out of date — always say "call to confirm". Medicine information never tells a patient to switch a prescribed drug.
+8. **Location stays on the device.** "Nearest" is computed in the app against a downloaded list. We do not send the patient's GPS position to our Worker for these features.
+
+---
+
+## 4. Service-by-service analysis
+
+### 4.1 e-RaktKosh (blood banks)
+**Facts.** Web-based blood bank management system under the National Health Mission, developed by C-DAC; inaugurated 7 Apr 2016 ✅. Citizens can search state-wise, district-wise or by blood-bank name for availability of blood components and contact details ✅. A plan to integrate the Rare Donor Registry of India was reported 🟡. An open **Blood Bank Directory** dataset (state/city list with address, geo-location, contact, pin code, email, website; Open Government Licence – India) exists, mirrored on the AIKosh portal ✅; the original is a National Health Portal dataset.
+**Not found:** ❌ a public API for live stock.
+
+| Level | What we do | Notes |
+|---|---|---|
+| L0/L1 | "Blood banks (e-RaktKosh)" button (exists) | Owner confirmed the URL |
+| L2 | **Nearest blood banks** from the directory snapshot, sorted by GPS distance, with a *Call* button and a "stock changes hourly — call first" warning | Need: OGD API key, licence check, dataset id and freshness check. Dataset may be stale or incomplete |
+| L3 | Live stock | **Only** via a written request to C-DAC / NHM. Do not infer from the website |
+| Own feature | **Emergency blood request** inside ArogyaBot's own responder/donor network | Independent of government data. Needs its own consent and anti-abuse design |
+
+**Verdict:** redirect now, snapshot in Phase S2, live stock only by partnership.
+**Risks:** stale phone numbers (patient harm), dataset licence, contact details of individuals (the directory is institutional — drop any personal fields).
+
+### 4.2 U-WIN (vaccination)
+**Facts.** Digital platform for Universal Immunization Programme vaccination services for pregnant women and children (birth to 16 years); citizens can self-register on the web portal or the citizen app; QR-based e-vaccination certificate; SMS reminders three days before a due date; FAQs in 11 languages ✅ (MoHFW press note, Nov 2024). Utility to create ABHA and **child ABHA** from U-WIN ✅ (PIB). U-WIN is described as linked to ABHA 🟡.
+**Not found:** ❌ a public API. 🟡 Unknown whether the U-WIN certificate appears in DigiLocker — **test in the DigiLocker sandbox** before promising it.
+
+| Level | What we do |
+|---|---|
+| L0/L1 | "U-WIN (vaccination)" button (exists). Add copy: "Registration and certificates are done on U-WIN." |
+| Own feature | **Immunisation schedule + reminders** inside ArogyaBot for each family member. Schedule content must be copied from the official National Immunization Schedule and **reviewed by a clinician**. It does not claim to replace U-WIN records |
+| L3/L4 | Fetch vaccination records through **ABHA consent** (Phase 5 of the ABDM plan) or **DigiLocker** (Phase 4, already mocked) — once real credentials exist and a sandbox test shows the record is actually exposed |
+
+**Verdict:** redirect now; own tracker (Phase S4); records only via ABDM/DigiLocker later.
+
+### 4.3 eSanjeevani (tele-consult)
+**Facts.** Telemedicine platform of MoHFW designed and run by C-DAC Mohali, in two modes: eSanjeevani AB-HWC (doctor-to-doctor, for centres) and eSanjeevani OPD (patient-to-doctor) ✅. NHA announced integration with ABDM so users can create an ABHA, link existing records and share records with eSanjeevani doctors ✅. A government source says more integrations with third-party healthcare IT applications have been done ✅, but no public developer programme was found.
+**Not found:** ❌ public API or embed/SSO documentation.
+
+| Level | What we do |
+|---|---|
+| L0/L1 | Button exists. In the APK use an in-app browser (Phase S1) so the patient can return to ArogyaBot |
+| L4 | When ArogyaBot is a certified **HIU / PHR app**, a patient can bring their eSanjeevani records into My Documents **with consent**. Needs the real ABDM gateway |
+| L3 | Embedded or one-tap login: **only** through a partnership request to C-DAC. Do not frame the government site in an iframe without permission (it will likely be blocked and may breach terms) |
+| Own | Keep ArogyaBot's own telemedicine module. Explain the difference: *eSanjeevani = free government doctors; ArogyaBot telemedicine = our network* |
+
+**Verdict:** redirect now; integrate through ABDM consent; embed only by agreement.
+
+### 4.4 Jan Aushadhi (generic medicines)
+**Facts.** Scheme implemented by PMBI (Pharmaceuticals & Medical Devices Bureau of India), which maintains the **Janaushadhi Sugam** app: locate nearby kendras through Google Maps, search generic medicines, compare generic vs branded prices ✅ (Lok Sabha answer, Aug 2023). Open data on data.gov.in is aggregate (counts of kendras by state/year) ✅.
+**Not found:** ❌ kendra-level list or product price list as open data or API.
+
+| Level | What we do |
+|---|---|
+| L0/L1 | Button exists. Add "Get the Jan Aushadhi Sugam app" hand-off when the app's official store link is confirmed |
+| L2/L3 | **Generic-alternative finder** and **nearest kendra list** need PMBI's data. Send a written request for (a) the store list with coordinates and (b) the product master with MRP, with terms of reuse |
+| Own | In e-prescriptions/pharmacy modules: "Ask your doctor or pharmacist if a Jan Aushadhi generic is suitable" — **never** auto-substitute |
+
+**Verdict:** redirect now; integrate only with PMBI's agreement.
+**Risks:** wrong substitution advice (patient harm), prices out of date, unlicensed data copying.
+
+### 4.5 Ayushman Arogya Mandir (primary-care centres)
+**Facts.** Health and Wellness Centres were renamed Ayushman Arogya Mandir ✅ (Tribune, Nov 2023). States upload photographs of rebranded centres to the AB-HWC portal ✅. eSanjeevani is deployed at these centres for doctor-to-doctor consults ✅.
+**Not found:** ❌ a citizen-facing "find my nearest" page or API. 🟡 A commercial page lists helpline **14555** for Ayushman Bharat — verify with NHA before showing it.
+
+| Level | What we do |
+|---|---|
+| Now | Plain text only (done): ask your ASHA worker or local PHC. **No link.** |
+| L4 | Discover facilities through the **ABDM Health Facility Registry (HFR)** — a registry of hospitals, clinics, diagnostic labs and pharmacies with unique facility IDs ✅; HFR has API documentation in the ABDM sandbox ✅ |
+| L3 | Ask NHM whether a citizen locator or dataset is planned |
+
+**Verdict:** no link now; integrate via HFR once ABDM access exists (Phase S7).
+
+### 4.6 ECHS (ex-servicemen)
+**Facts.** Launched 1 Apr 2003; care through ECHS polyclinics, service medical facilities, government hospitals and empanelled hospitals; the official site is echs.gov.in ✅ (DESW). Polyclinics are typed A–E by beneficiary load ✅. Emergency: treatment at an empanelled hospital is allowed without a prior referral ✅ (Central Organisation ECHS letter, reproduced by gconnect/staffnews). 🟡 An **ECHS Beneficiary App** offers card status, polyclinic contacts, empanelled-hospital details, appointment booking, referral management and change of polyclinic (community site esmcorner — verify on echs.gov.in). 🟡 Referral validity is commonly stated as three months, 180 days for serious cases, and direct access for age 70+ — **do not hard-code these**; the tracker takes the validity date from the patient's slip.
+**Not found:** ❌ any public API or open dataset of polyclinics/empanelled hospitals. Community sites republish lists; those are not official sources.
+
+| Level | What we do |
+|---|---|
+| Done | Scheme type, masked card, referral tracker, emergency note, official link |
+| L1 | Add "Get the official ECHS Beneficiary App" hand-off once the store link is confirmed on echs.gov.in |
+| L2 | Polyclinic and empanelled-hospital directories **only with written permission** from DESW / ECHS Central Organisation (they publish lists on echs.gov.in; reuse terms unknown) |
+| Rule | We never store the full card number (already enforced; tested) |
+
+**Verdict:** redirect + own features. Directories are optional and depend on permission.
+
+### 4.7 myScheme
+**Facts.** National scheme-discovery platform by NeGD/MeitY; 4,000+ schemes, of which 550+ central and 3,440+ State/UT ✅ (Vikaspedia); eligibility check, scheme finder and detail pages ✅. **API Setu lists myScheme under "Service APIs"** (non-user-specific data); consumers register on API Setu, subscribe, and access is granted only after the publisher approves ✅ (docs.apisetu.gov.in).
+**Open question (❌ not verified):** exactly which myScheme fields the API returns (names, eligibility text, states, URLs?) and whether the eligibility *check* is exposed. **Read the API Setu catalogue entry after registering.**
+
+| Level | What we do |
+|---|---|
+| L0 | Button exists |
+| **L3** | **Replace the hand-curated state table** (`schemes-registry.js`, where 🟡 rows show no amounts) with myScheme data: scheme name, ministry/state, short description, official link, **myScheme's own "last updated"**. Keep our curated ✅ rows as an override and as an offline fallback |
+| Guardrail | Cover amounts are shown only if the API provides them in a structured field and a human has spot-checked them. Otherwise "check the official site" stays |
+
+**Verdict:** **integrate — the one real API route.** Apply for API Setu access now; it can run in parallel with everything else.
+
+### 4.8 Tele-MANAS 14416
+**Facts.** Toll-free mental-health support in 20 languages ✅. 🟡 Said to integrate with ABHA — unverified.
+**Verdict:** tap-to-call only (done). Keep the number in the SOS "other help" list. No data integration.
+
+---
+
+## 5. Shared architecture
+
+```
+App (PWA / Android)                       Worker: arogyabot-gov  (NEW, separate from SOS/ABDM/admin)
+ ├─ officialLinks (L0/L1)                  ├─ /myscheme/*   → API Setu (L3)   [secret: API Setu key]
+ ├─ finders UI (L2)  ◄── static JSON ──┐   ├─ mock mode: fake scheme data
+ ├─ vaccine tracker (own)              │   └─ verifies Firebase token (same pattern as ABDM Worker)
+ └─ myScheme cards (L3) ───────────────┼──► Worker
+                                       │
+Snapshot pipeline (GitHub Actions, scheduled) ── fetch OGD / permitted datasets
+   → normalise → write js/data/snapshots/*.json → opens a Pull Request → HUMAN REVIEW → merge → deploy
+```
+
+**Why snapshots reviewed by a human:** open data can be stale or wrong. A pull request makes the diff visible (e.g. "37 blood banks removed") before patients see it.
+
+**Why a separate Worker:** different secrets (API Setu key), different failure modes, and it keeps the ABDM Worker small. The ABDM plan's golden rule (separate Workers per concern) applies.
+
+**Snapshot record shape (proposed)**
+```json
+{ "id": "bb-27107", "kind": "blood_bank", "name": "...", "state": "MH", "district": "...",
+  "address": "...", "lat": 19.0, "lng": 72.8, "phone": "...", "source": "ogd:<resource-id>",
+  "fetchedAt": "2026-10-10", "lastReviewed": "2026-10-12" }
+```
+Rules: institutional contact data only; drop individuals' personal fields; split files per state (about 100–300 KB each) so the app loads only the patient's state; service worker caches them; works offline.
+
+**Flags (all default off):** `GOV_FINDERS_ENABLED`, `MYSCHEME_ENABLED`, `VACCINE_TRACKER_ENABLED`, `GENERIC_FINDER_ENABLED`, `ESANJEEVANI_EMBED_ENABLED`; modes `GOV_MODE = 'mock' | 'live'`.
+
+---
+
+## 6. Phase plan
+
+Sizes: **S** ≈ days, **M** ≈ 1–2 weeks, **L** ≈ weeks. Only the dependencies column depends on outside parties.
+
+### Phase S0 — Housekeeping and applications  · Size S · *no dependencies*
+**Goal:** correct what is wrong today and start every slow approval immediately.
+- [x] Remove the Arogya Mandir link and add plain guidance *(done in this iteration; tests updated)*.
+- [ ] Click-test every link in `OFFICIAL_LINKS`; bump `OFFICIAL_LINKS_REVIEWED` only after that.
+- [ ] Register on **API Setu** as a consumer; subscribe to the myScheme API (see §7 for the checklist).
+- [ ] Create an **OGD (data.gov.in)** account and API key; find the exact dataset id for the Blood Bank Directory and read its licence page.
+- [ ] Send the three partnership/permission emails (templates in Appendix A): PMBI, C-DAC (eSanjeevani and e-RaktKosh), DESW/ECHS.
+- [ ] Confirm the ECHS Beneficiary App and Jan Aushadhi Sugam store links on their official pages.
+**Exit:** application receipts saved; link list fully verified; open questions in §9 answered or assigned.
+
+### Phase S1 — Redirect layer upgrade (L0/L1)  · Size S · *no dependencies*
+**Goal:** make redirects safe, consistent and checkable. Works today with no credentials.
+- Link registry: each entry gets `level`, `owner`, `verifiedOn`, `kind` (`web` | `app` | `tel`).
+- **In-app browser** for the Android app (Capacitor Browser plugin) so patients return to ArogyaBot; normal new tab on web. *Device test required — not verified in the WebView yet.*
+- Add hand-off buttons for official apps (ECHS Beneficiary, Jan Aushadhi Sugam, U-WIN, eSanjeevani) **once the store links are confirmed**.
+- `tests/links-test.js`: https only, `.gov.in` host allowlist, `rel="noopener noreferrer"`, every key has a hint, and an optional online check script (`scripts/check-links.js`) that reports non-200 results.
+- Short explainer on each service card: "ArogyaBot does not receive anything you enter there."
+**Exit:** link test in `npm test`; APK opens a link and returns; owner signs off the list.
+
+### Phase S2 — Open-data snapshots and finders (L2)  · Size M · *needs: OGD key, licence check (S0)*
+**Goal:** "nearest blood bank" and other finders from licensed open data, clearly dated.
+- Snapshot pipeline (GitHub Action + normaliser + PR review) as in §5.
+- `js/data/snapshots/blood-banks-<state>.json` and a finder card in **Nearby Help** (flag `GOV_FINDERS_ENABLED`): nearest five by GPS, **Call** and **Directions** buttons, "last reviewed" and "stock changes often — call before you travel".
+- **Never display stock.** A "Check availability on e-RaktKosh" button handles that.
+- ECHS directories (polyclinics, empanelled hospitals): **only if DESW/ECHS grants written permission**; otherwise keep the redirect.
+- Extend to other licensed datasets only after the same licence check (e.g. hospitals, if a suitable OGD dataset exists — ❌ not verified).
+**Tests:** distance sorting; offline cache; empty-state (no list for the state); stale-data warning appears when `lastReviewed` is older than a set number of days; no personal fields in snapshots; PR check fails if row count drops sharply.
+**Exit:** finder works offline for one pilot state; pipeline produces a reviewable PR; owner approves the first dataset.
+
+### Phase S3 — myScheme via API Setu (L3)  · Size M · *needs: API Setu approval (S0)*
+**Goal:** state-wise scheme information that stays current without hand-editing.
+- New Worker `arogyabot-gov` with `/myscheme/search` and `/myscheme/scheme/:id`; Firebase-token auth; KV/edge cache; **mock mode** shipped first.
+- Adapter `js/services/myscheme-client.js` (flag `MYSCHEME_ENABLED`).
+- Schemes screen: below our curated state card, a "More schemes from myScheme" list filtered by state (and by category when the API supports it), each with `lastUpdated` and a link to the official scheme page.
+- Our curated ✅ rows stay as override/fallback; the registry's `ok:false` rule still applies (no amounts without a structured, reviewed field).
+- Read the real API response in the API Setu catalogue and update this plan's §4.7 "open question".
+**Tests:** mock server; Worker rejects missing/invalid Firebase token; cache expiry; API down → falls back to the curated registry with a clear notice; no raw HTML from the API is inserted without escaping.
+**Exit:** one state shows live data; fallback verified by turning the Worker off.
+
+### Phase S4 — Vaccination and mother-child (own feature + L4 later)  · Size M · *needs: clinician review of the schedule*
+**Goal:** useful today without any government API; ready to receive records later.
+- Immunisation schedule per family member (from the official National Immunization Schedule), due dates, reminders (reuse the medicine-reminder engine), mark-as-done with date and place.
+- Prominent hand-off: "Register and download your certificate on U-WIN".
+- Link from the Pregnancy module; keep JSY/PMSMA/PMMVY as information links until verified (🟡 in the gap analysis).
+- **Test in the DigiLocker sandbox** whether the vaccination certificate is retrievable; only then add "Import certificate" (reuses Phase 4 code).
+- ABHA-based fetch of U-WIN records waits for the ABDM real gateway (Phase S7).
+**Tests:** due-date maths (preterm, missed doses), per-member isolation, reminders fire once, data export, no medical claims in copy.
+**Exit:** clinician sign-off recorded in the repo; two family members tested on a real phone.
+
+### Phase S5 — Medicines: Jan Aushadhi (L2/L3, partnership)  · Size M · *needs: PMBI data/permission*
+**Goal:** help patients find affordable generics **safely**.
+- Interim (no permission yet): Sugam app hand-off and link only.
+- If PMBI agrees: ship the kendra list as a snapshot (like S2) and a generic-name search over the product master (flag `GENERIC_FINDER_ENABLED`).
+- Pharmacy and e-prescription screens show "Ask your doctor or pharmacist about a generic" with a link to the finder. **No automatic substitution, no dose advice.**
+- Show price only as "reference price, dated", never as a quote.
+**Tests:** copy review for medical safety; search by generic and brand name; stale-price warning.
+**Exit:** PMBI written terms stored in `docs/`; pharmacist review of the wording.
+
+### Phase S6 — Tele-care and primary care discovery  · Size M–L · *needs: C-DAC reply for any embed; otherwise ABDM (S7)*
+**Goal:** one clear "get a doctor" path.
+- "Which service?" helper on the Telemedicine screen: eSanjeevani (free, government) vs ArogyaBot doctors vs Tele-MANAS (mental health) — static guidance, no data transfer.
+- If C-DAC offers a supported hand-off or SSO: implement behind `ESANJEEVANI_EMBED_ENABLED` with mock mode; otherwise keep the redirect.
+- Add the confirmed Ayushman Bharat helpline number **only after** NHA/PM-JAY confirms it (🟡 now).
+**Exit:** helper screen reviewed; embed decision recorded (yes/no with the reason).
+
+### Phase S7 — ABDM-dependent integrations (L4)  · Size L · *needs: ABDM sandbox → production (same blocker as the ABDM plan)*
+**Goal:** the integrations that only work through consent and registries.
+- **Facility discovery** through HFR: Arogya Mandir, clinics, labs, pharmacies with facility IDs (replaces the "ask your ASHA worker" text with a real finder).
+- **Records via consent:** bring eSanjeevani and (if exposed) U-WIN vaccination records into My Documents through the HIU flow; shown in the My Consent screen of the ABDM plan.
+- **UHI** service discovery (appointments, teleconsultation) — evaluate after HFR and consent are live.
+**Exit:** each item passes the official ABDM sandbox test cases (the same exit rule as the ABDM plan: no claim until tested).
+
+### Cross-cutting (every phase)
+- **Languages:** every new card string goes through the future Hindi/Marathi layer; write strings in one place per module so translation is mechanical.
+- **Accessibility:** large tap targets for call/directions buttons, readable contrast, screen-reader labels.
+- **Privacy (DPDP Act 2023):** location stays on device; no analytics on health searches; list new data uses in the privacy notice. Have a lawyer verify the current rules.
+- **Rollback:** every phase can be switched off by flipping its flag; snapshots are versioned in git.
+
+---
+
+## 7. Credentials and approvals tracker (owner fills the status column)
+
+| # | What | From | How | Unblocks | Status |
+|---|---|---|---|---|---|
+| 1 | **API Setu consumer account + myScheme subscription** | NeGD / MeitY | Register at apisetu.gov.in, subscribe to the myScheme API; access starts after publisher approval ✅ | S3 | ☐ |
+| 2 | **OGD API key** | data.gov.in | Free account → My Account → API key ✅ | S2 | ☐ |
+| 3 | **Dataset licence check** (Blood Bank Directory) | data.gov.in dataset page | Read licence and "last updated" | S2 | ☐ |
+| 4 | **ABDM sandbox + HFR/HPR** | NHA | Already in the ABDM plan; HFR facility search is part of the same programme | S7 | ☐ (pending, as for ABHA/DigiLocker) |
+| 5 | **PMBI data/permission** | PMBI (Jan Aushadhi) | Email template A2 | S5 | ☐ |
+| 6 | **C-DAC reply** (eSanjeevani hand-off; e-RaktKosh stock) | C-DAC / MoHFW / NHM | Email template A3 | S6, S2-live-stock | ☐ |
+| 7 | **DESW/ECHS permission** for directories | DESW / ECHS Central Org | Email template A4 | S2 (ECHS part) | ☐ |
+| 8 | **Clinician reviewer** for the immunisation schedule | Your network | A doctor signs off the schedule text | S4 | ☐ |
+| 9 | **Pharmacist reviewer** for generic wording | Your network | Review safety copy | S5 | ☐ |
+| 10 | Store links for ECHS Beneficiary and Jan Aushadhi Sugam apps | Official sites | Open and copy | S1 | ☐ |
+
+---
+
+## 8. Risk register
+
+| # | Risk | Impact | Mitigation |
+|---|---|---|---|
+| 1 | Snapshot data is stale (closed blood bank, wrong phone) | Patient wastes time in an emergency | "Call to confirm" copy; dated records; PR review; stale-data warning; redirect for live stock |
+| 2 | Dataset licence or terms not checked | Legal exposure | Licence check in S0/S2; keep the licence text in `docs/`; drop datasets without clear terms |
+| 3 | Scraping temptation when no API exists | Terms breach, brittle, unethical | Rule 4: ask or redirect. No scraping scripts in the repo |
+| 4 | Community sites (esmcorner, gconnect, commercial pages) treated as official | Wrong rules shown (e.g. referral validity) | Evidence tags in this plan; hard-code nothing marked 🟡; patient enters dates from the slip |
+| 5 | Generic-medicine finder encourages unsafe substitution | Patient harm | "Ask your doctor or pharmacist"; no auto-substitution; pharmacist review |
+| 6 | API Setu/myScheme response changes or goes down | Broken screen | Fallback to curated registry; response schema checks; cache |
+| 7 | Rendering API text as HTML | XSS | Escape everything (already the pattern in `service-schemes.js`); test with hostile strings |
+| 8 | Wrong or dead external link | Patient lands on an error or a lookalike site | S1 link tests + allowlist; owner click-test before release; never accept links from user input |
+| 9 | Unofficial sites mimic government names | Phishing | `.gov.in` allowlist test; no third-party "official" aggregators |
+| 10 | Heavy snapshot files slow the app / APK | Poor UX | Per-state files, lazy load, service-worker cache, size budget in tests |
+| 11 | Promised integrations never get approved | Wasted effort | Every phase has a working redirect fallback; no phase depends on approval for its first release |
+| 12 | Location privacy | DPDP exposure | Distance computed on device; no GPS sent to Workers for these features |
+
+---
+
+## 9. Open questions for the owner
+
+1. **Pilot state** for the first snapshot (suggest Maharashtra, matching your location and the MJPJAY link).
+2. Do you want the **emergency blood request** (your own donor network) designed now, or only the government directory?
+3. Who can act as **clinician reviewer** (S4) and **pharmacist reviewer** (S5)?
+4. Should the **APK use the in-app browser** (recommended) or the system browser for government links?
+5. Are the three **emails in Appendix A** acceptable to send under the app's organisation name? (Do you have an organisation or registered entity to sign them?)
+6. Does the 14555 helpline appear in an **official NHA source** you can confirm? Until then it stays out of the app.
+
+---
+
+## 10. Sources used (and how much to trust them)
+
+| Topic | Source | Trust |
+|---|---|---|
+| ECHS scheme basics, official site | desw.gov.in "About ECHS" | ✅ |
+| ECHS polyclinic types, emergency direct admission | gconnect.in / staffnews.in reproducing Central Organisation ECHS orders | 🟡 (reproduces official text) |
+| ECHS Beneficiary App, referral validity, claims | esmcorner.com (community site) | 🟡 |
+| U-WIN scope, SMS reminders, certificate | mohfw.gov.in press note (29 Nov 2024); PIB document (Jan 2025); UNDP page | ✅ |
+| eSanjeevani modes and ABDM integration | OECD OPSI case; The Statesman; officerspulse | ✅ / 🟡 |
+| Jan Aushadhi Sugam app, PMBI | Lok Sabha Unstarred Q.3806 (Aug 2023) on eparlib.nic.in | ✅ |
+| Jan Aushadhi data | data.gov.in resource pages (aggregate counts; "API does not exist") | ✅ |
+| Blood bank directory dataset | AIKosh dataset page (mirror of National Health Portal data) | 🟡 (mirror) |
+| e-RaktKosh features | Vikaspedia (C-DAC content) | ✅ / 🟡 |
+| OGD API key process | data.gov.in; `datagovindia` package docs | ✅ / 🟡 |
+| API Setu Service APIs incl. myScheme; subscription flow | docs.apisetu.gov.in | ✅ |
+| myScheme scope (4,000+ schemes) | Vikaspedia; NeGD pages | ✅ |
+| HFR, UHI, sandbox | ABDM "HFR Pathways" PDF; health.uk.gov.in overview; dpi.global | ✅ / 🟡 |
+| AAM rename; states upload to AB-HWC portal | Tribune (Nov 2023) | ✅ |
+| Helpline 14555 | Policybazaar (commercial) | 🟡 |
+
+**Limits of this analysis.** I could not open the private developer areas of any portal, so "no public API found" means my searches found none. I did not test any live portal. Dataset sizes, field names and licence wording must be read on the real pages in Phase S0/S2.
+
+---
+
+## Appendix A — Email templates (edit before sending)
+
+**A1 — API Setu (checklist, not an email):** register as a consumer → pick *Service API → myScheme* → state the use ("show scheme information to citizens in a health app; no user data sent") → submit organisation details → wait for publisher approval.
+
+**A2 — PMBI (Jan Aushadhi)**
+> Subject: Request for permission to use Jan Aushadhi store and product data in a health app
+> We run ArogyaBot, a patient health app. We would like to help citizens find Jan Aushadhi Kendras and understand generic medicine options. May we (1) use the official store list with coordinates, and (2) use the product master with MRP, with attribution and a visible "last updated" date? Please share any API, data licence or terms. We will not substitute or recommend medicines; we will always advise patients to ask their doctor or pharmacist.
+
+**A3 — C-DAC (eSanjeevani, e-RaktKosh)**
+> Subject: Integration enquiry — eSanjeevani hand-off and e-RaktKosh blood stock
+> We would like to send patients to eSanjeevani from our app and, if possible, support a secure hand-off or sign-in. Is there a partner programme, deep-link specification or API? Separately, is a read-only e-RaktKosh stock or directory API available to registered health apps? We currently only link to your public sites.
+
+**A4 — DESW / ECHS Central Organisation**
+> Subject: Permission to display ECHS polyclinic and empanelled hospital lists
+> Our app links ex-servicemen to ECHS. May we show the polyclinic and empanelled hospital lists published on echs.gov.in with attribution and a "last updated" date, and link to the official ECHS Beneficiary App? Please share the preferred data source and reuse terms.
+
+---
+
+## Appendix B — Files this plan will add (by phase; nothing here exists yet)
+
+| Phase | New / changed files |
+|---|---|
+| S1 | `js/data/links-registry.js` (or extend `OFFICIAL_LINKS`), `tests/links-test.js`, `scripts/check-links.js` |
+| S2 | `.github/workflows/refresh-snapshots.yml`, `scripts/build-snapshots.js`, `js/data/snapshots/*.json`, `js/modules/patient/gov-finders.js`, `tests/finders-test.js` |
+| S3 | `worker-gov/` (Worker), `js/services/myscheme-client.js`, `tests/myscheme-test.js` |
+| S4 | `js/modules/patient/vaccination-tracker.js`, `js/data/immunisation-schedule.js`, `tests/vaccine-test.js` |
+| S5 | `js/modules/patient/generic-finder.js` (flagged), `tests/generic-test.js` |
+| S6 | Telemedicine helper card; optional embed adapter |
+| S7 | HFR/consent adapters in the ABDM Worker; consent screen additions |
+
+---
+
+## Appendix C — Change log
+
+| Version | Date | Change |
+|---|---|---|
+| v1.0 | 3 Oct 2026 | First version. Arogya Mandir link removed from the app; four owner-confirmed links recorded; integrate-or-redirect analysis; phases S0–S7; approvals tracker; risks; email templates |
