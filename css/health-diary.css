@@ -1,0 +1,31 @@
+/* Daily Health Diary & Calendar — reuses .cal-grid / .cal-cell / .cal-nav / .cyc-legend from fitness-and-health-tools.css */
+.dy-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+.dy-chip{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:12px;background:var(--bg-subtle);border:1px solid var(--border-color);cursor:pointer;color:inherit;font:inherit;position:relative;}
+.dy-chip:hover{border-color:var(--brand-primary);}
+.dy-chip-ico{width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 38px;background:var(--bg-subtle);}
+.dy-chip-txt{display:flex;flex-direction:column;min-width:0;}
+.dy-chip-txt small{color:var(--text-muted);font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dy-chip-plus{position:absolute;right:10px;top:10px;font-size:.7rem;color:var(--text-muted);}
+.dy-chip-new{border-style:dashed;}
+.dy-cell{position:relative;cursor:pointer;}
+.dy-cell.dy-selected{outline:2px solid var(--brand-primary);outline-offset:-2px;}
+.dy-cell.dy-future{opacity:.45;}
+.dy-dots{position:absolute;bottom:3px;left:0;right:0;display:flex;justify-content:center;gap:2px;}
+.dy-dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+.dy-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border-color);}
+.dy-row:last-child{border-bottom:none;}
+.dy-row-actions{display:flex;gap:6px;}
+.dy-row-actions button{width:32px;height:32px;border-radius:50%;background:var(--bg-subtle);font-size:.78rem;}
+.dy-row-actions button:hover{background:var(--border-color);}
+.dy-badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.7rem;font-weight:700;}
+.dy-alert{margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(220,38,38,.1);color:#dc2626;font-size:.8rem;}
+.dy-tabs{display:flex;flex-wrap:wrap;gap:6px;}
+.dy-tab{padding:6px 12px;border-radius:99px;background:var(--bg-subtle);border:1px solid var(--border-color);font-size:.8rem;cursor:pointer;color:inherit;}
+.dy-tab.sm{padding:4px 10px;font-size:.74rem;}
+.dy-tab.on{background:var(--brand-primary);border-color:var(--brand-primary);color:#fff;}
+.dy-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+.dy-stat{background:var(--bg-subtle);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;}
+.dy-stat small{color:var(--text-muted);font-size:.7rem;}
+.dy-stat strong{font-size:.95rem;}
+.dy-set-label{font-size:.78rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+.dy-pre{white-space:pre-wrap;word-break:break-word;max-height:46vh;overflow:auto;background:var(--bg-subtle);border-radius:10px;padding:12px;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;margin:0;}
