@@ -312,7 +312,9 @@ function softRefreshCurrentView(){
   // window's — the window itself no longer scrolls at all.
   const scrollBox = document.getElementById('app-content-area');
   const savedScroll = scrollBox ? scrollBox.scrollTop : 0;
-  renderCurrentView(currentView);
+  // Keep anything the user chose/typed but hasn't saved (dropdowns, inputs, focus) — see js/core/view-state.js.
+  if(typeof uiStateRunBackgroundRender==='function') uiStateRunBackgroundRender(()=>renderCurrentView(currentView));
+  else renderCurrentView(currentView);
   if(scrollBox) scrollBox.scrollTop = savedScroll;
 }
 
