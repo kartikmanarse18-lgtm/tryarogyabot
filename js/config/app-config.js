@@ -33,9 +33,10 @@ const ADMIN_DOOR_WORD = 'staffdesk';
 /* ---------- Native (Android) app ---------- */
 // True only inside the Capacitor app shell, never in a normal browser/PWA.
 const IS_NATIVE_APP = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform==='function' && window.Capacitor.isNativePlatform());
-// Remote push (FCM). Leave FALSE until android/app/google-services.json exists —
-// registering for push without it crashes the Android app. See NATIVE_APP.md, step 3.
-const NATIVE_PUSH_ENABLED = false;
+// Remote push (FCM). Registering for push without android/app/google-services.json crashes the Android app, so this
+// is switched on ONLY by the build: when the GOOGLE_SERVICES_JSON secret exists the workflow adds the marker
+// "ArogyaBotPush" to the app's user-agent. (The app loads the live website, so a flag edited inside the APK would never be seen.)
+const NATIVE_PUSH_ENABLED = IS_NATIVE_APP && /ArogyaBotPush/.test(navigator.userAgent || '');
 
 /* ---- ABDM / DigiLocker integration (plan: docs/ABDM_INTEGRATION_PLAN.md) ----
    Every flag is OFF. Later phases check these before showing anything new, so each phase can ship dark.
@@ -45,6 +46,15 @@ const DIGILOCKER_ENABLED = true;
 const DOCS_STORAGE_ENABLED = false;  // Phase 3: new document uploads go to Firebase Storage (needs Blaze plan + storage.rules published)
 const ABDM_ENV = 'sandbox';          // 'sandbox' | 'production'
 const ABDM_WORKER_URL = 'https://arogyabot-abdm.kritzaararogyabot.workers.dev';          // set when the arogyabot-abdm Worker is deployed
+
+/* ---- Android app download (js/services/apk-download.js) ----
+   The "Get the Android app" icon/card appears on Android browsers ONLY when a signed APK is published at
+   github.com/<APK_RELEASE_REPO>/releases/tag/<APK_RELEASE_TAG> (the GitHub Actions workflow does this on every push to main
+   once the signing secrets exist). With no release yet, everything stays hidden by itself. Set to false to hide it always. */
+const APK_DOWNLOAD_ENABLED = true;
+const APK_RELEASE_REPO = 'kartikmanarse18-lgtm/tryarogyabot';
+const APK_RELEASE_TAG = 'android-latest';
+const APK_FILE_NAME = 'ArogyaBot.apk';
 
 /* Official sites shown as plain links (Phase 1 / Track A). Re-check these before each release. */
 const OFFICIAL_LINKS_REVIEWED = '2026-10-02';
@@ -63,6 +73,6 @@ function officialLinksCardHTML(keys, heading){
     <p style="color:var(--text-muted);font-size:.75rem;margin:8px 0 0;">Opens the official government site in your browser. ArogyaBot does not receive anything you enter there. Links last reviewed ${OFFICIAL_LINKS_REVIEWED}.</p></div>`;
 }
 
-// URL of your deployed push Worker (worker/push-worker.js), e.g. 'https://arogyabot-push.<you>.workers.dev'.
-// Empty = remote push relay off (reminders + in-app alerts still work).
-const PUSH_WORKER_URL = '';
+// Where the app asks for a push to be sent to ANOTHER user's phone (prescription ready, appointment cancelled ...).
+// Served by the SOS Worker at /api/push/notify (same SERVICE_ACCOUNT_JSON secret). Set '' to switch the relay off.
+const PUSH_WORKER_URL = SOS_WORKER_URL.replace(/\/$/, '') + '/api/push';
