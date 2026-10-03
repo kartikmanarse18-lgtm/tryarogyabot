@@ -24,6 +24,7 @@ function renderCurrentView(navId){
     'ph-dash': viewPharmacyDash, 'ph-orders': viewPharmacyOrders, 'ph-inventory': viewPharmacyInventory, 'ph-billing': viewPharmacyBilling, 'ph-delivery-roster': viewPharmacyDeliveryRoster,
     'd-dash': viewDoctorDash, 'd-appts': viewDoctorAppts, 'd-slots': viewDoctorSlots, 'd-profile': viewDoctorProfile,
     'dl-dash': viewDeliveryDash, 'dl-orders': viewDeliveryOrders, 'dl-profile': viewDeliveryProfile,
+    'about': viewAbout,
   };
   c.innerHTML = renderers[navId] ? renderers[navId]() : '<div class="empty-state">View not found</div>';
   postRenderHooks(navId);

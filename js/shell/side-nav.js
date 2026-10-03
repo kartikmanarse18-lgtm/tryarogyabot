@@ -66,6 +66,8 @@ const SIDENAV_HANDOFFS = {
 };
 // ABDM plan, Phase 2: ABHA entry only appears when the flag is on (flag off = nav identical to before).
 if(typeof ABDM_ENABLED!=='undefined' && ABDM_ENABLED===true){ SIDENAV.patient.push({id:'p-abha', label:'ABHA Health ID', icon:'fa-id-card-clip'}); }
+// About page: one entry at the end of every role's menu (view lives in js/modules/shared/about.js).
+Object.keys(SIDENAV).forEach(r=>SIDENAV[r].push({id:'about', label:'About ArogyaBot', icon:'fa-circle-info'}));
 function buildSideNav(role){
   const nav = document.getElementById('app-sidenav');
   let items = SIDENAV[role];
