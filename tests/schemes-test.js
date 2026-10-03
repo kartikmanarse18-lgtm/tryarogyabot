@@ -38,7 +38,7 @@ async function load(){
   ok('screen: old scheme types still present (pmjay, cghs, esic, state, private, none)',['pmjay','cghs','esic','state','private','none'].every(k=>html.includes(`value="${k}"`)));
   ok('screen: state selector has 36 states/UTs + placeholder',(html.match(/<option value="[A-Z]{2}"/g)||[]).length===36);
   ok('screen: Tele-MANAS 14416 tap-to-call',/href="tel:14416"/.test(html)&&/20 languages/.test(html));
-  ok('screen: finders for Arogya Mandir, Jan Aushadhi, blood banks, U-WIN, eSanjeevani',['Arogya Mandir','Jan Aushadhi','e-RaktKosh','U-WIN','eSanjeevani'].every(t=>html.includes(t)));
+  ok('screen: finders for Jan Aushadhi, blood banks, U-WIN, eSanjeevani + plain-text Arogya Mandir guidance',['Jan Aushadhi','e-RaktKosh','U-WIN','eSanjeevani'].every(t=>html.includes(t))&&/ASHA worker/.test(html));
   ok('screen: header mentions ECHS',/ECHS/.test(html));
   const box=w.document.createElement('div');box.id='t-box';box.innerHTML=html;w.document.body.appendChild(box);
 
@@ -95,7 +95,7 @@ async function load(){
   /* ---- Nearby Help ---- */
   w.eval("dbSet('profile',Object.assign({},db('profile')||{},{lat:null,lng:null}))");
   const n1=ev('nearbyHelpCard()');
-  ok('Nearby Help (no location): finder links present',/Jan Aushadhi/.test(n1)&&/e-RaktKosh/.test(n1)&&/Arogya Mandir/.test(n1)&&/ECHS/.test(n1)&&/Use my live location/.test(n1));
+  ok('Nearby Help (no location): finder links present',/Jan Aushadhi/.test(n1)&&/e-RaktKosh/.test(n1)&&/ECHS/.test(n1)&&/Use my live location/.test(n1));
   w.eval("dbSet('profile',Object.assign({},db('profile')||{},{lat:19.99,lng:73.78}))");
   const n2=ev('nearbyHelpCard()');
   ok('Nearby Help (with location): ambulances/police sections kept, finder links added',/Ambulances/.test(n2)&&/Police stations/.test(n2)&&/Jan Aushadhi/.test(n2));
@@ -104,7 +104,8 @@ async function load(){
   const L=JSON.parse(ev('JSON.stringify(OFFICIAL_LINKS)'));
   const bad=Object.entries(L).filter(([k,l])=>!/^https:\/\//.test(l.url)||!/\.gov\.in\/?/.test(l.url));
   ok('all official links are https and on .gov.in domains',bad.length===0||console.log('   ',bad.map(b=>b[0]))||false);
-  ['echs','janaushadhi','aam','eraktkosh','uwin','esanjeevani','myscheme'].forEach(k=>ok('link defined: '+k,!!L[k]));
+  ['echs','janaushadhi','eraktkosh','uwin','esanjeevani','myscheme'].forEach(k=>ok('link defined: '+k,!!L[k]));
+  ok('no Arogya Mandir link (the ab-hwc portal is for states, not citizens)',!L.aam&&!/ab-hwc\.nhp\.gov\.in/.test(fs.readFileSync(path.join(root,'js/config/app-config.js'),'utf8')+fs.readFileSync(path.join(root,'js/modules/patient/service-schemes.js'),'utf8')));
 
   /* ---- static ---- */
   const idx=fs.readFileSync(path.join(root,'index.html'),'utf8'),sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
