@@ -20,7 +20,7 @@
    subpath on a *project* site (username.github.io/repo-name/). This
    file only ever uses relative paths for that same reason.
    ============================================================ */
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9';
 const CACHE_NAME = 'arogyabot-shell-' + CACHE_VERSION;
 
 // Precached at install time. Keep this list to the actual app shell —
@@ -74,7 +74,9 @@ const APP_SHELL = [
   './js/modules/patient/dashboard.js',
   './js/modules/patient/e-prescriptions.js',
   './js/modules/patient/fitness-tools.js',
+  './js/data/schemes-registry.js',
   './js/modules/patient/insurance-schemes.js',
+  './js/modules/patient/service-schemes.js',
   './js/modules/patient/lifestyle-tools.js',
   './js/modules/patient/medication-dosage.js',
   './js/modules/patient/medicine-reminder-clock.js',
