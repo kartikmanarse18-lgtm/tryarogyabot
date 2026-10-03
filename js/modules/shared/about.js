@@ -233,7 +233,11 @@ function aboutContentHTML(){
 
   const facts = aboutCard('id-card','App details', aboutRows(meta));
 
-  return hero + emergencyNotice + what + companion + why + emergencyFlow + roles + status + schemes + privacy + tech + roadmap + notices + credits + facts;
+  // Android download card: filled by js/services/apk-download.js only when a real signed release exists (otherwise stays empty).
+  const getApp = '<div data-apk-slot></div>';
+  if(typeof apkMountAll === 'function') setTimeout(apkMountAll, 0);
+
+  return hero + emergencyNotice + what + getApp + companion + why + emergencyFlow + roles + status + schemes + privacy + tech + roadmap + notices + credits + facts;
 }
 
 /* ---------- in-app view (all roles) ---------- */
