@@ -43,13 +43,14 @@ class L extends ResourceLoader{fetch(u,o){return u.startsWith('file://')?super.f
   ok('has an everyday health companion section',page.includes('Your everyday health companion'));
   ['Fitness &amp; body','Vitals &amp; risk screening','Nutrition','Sleep &amp; lifestyle',"Women\\'s health",'Medicines'].forEach(k=>ok('companion section covers: '+k.replace('&amp;','&').replace("\\'","'"),page.includes(k)||page.includes(k.replace("\\'","'"))));
   ok('mentions BP, blood sugar and custom measurements for the diary',/blood sugar/i.test(page)&&/blood pressure/i.test(page)&&/custom measurement/i.test(page));
-  ok('diary is labelled Coming soon and says it is not live',/Coming soon/.test(page)&&/not live yet/.test(page));
+  ok('diary is described as live (no longer coming soon)',!/not live yet/.test(page)&&/Daily health diary &amp; calendar/.test(page));
   const rowsD=ev('aboutStatusRows()')||[];const diary=(rowsD.find(r=>r[0].startsWith('Daily health diary'))||[])[1]||'';
-  ok('status table: diary is never labelled Live',diary!==''&&!/>Live</.test(diary));
+  ok('status table: diary is labelled Live',/>Live</.test(diary));
+  ok('honesty guard: the diary is only claimed Live because it really exists (screen + functions + nav item)',typeof ev('viewPatientDiary')==='function'&&typeof ev('dyAddEntry')==='function'&&(ev('SIDENAV.patient')||[]).some(i=>i.id==='p-diary'));
   const tools=(rowsD.find(r=>r[0].startsWith('Health tools'))||[])[1]||'';
   ok('status table: health tools labelled Live',/>Live</.test(tools));
   ok('page still says tools are not diagnosis',/do not diagnose or treat/.test(page));
-  ok('roadmap lists the daily health diary',/daily health diary/.test(page));
+  ok('roadmap now lists the next diary steps (reminders, sharing, devices)',/Diary reminders and sharing/.test(page));
 
   // --- status labels follow the real flags
   const rowsNow=ev('aboutStatusRows()')||[];const get=n=>(rowsNow.find(r=>r[0].startsWith(n))||[])[1]||'';
