@@ -3,6 +3,7 @@
    ============================================================ */
 function renderCurrentView(navId){
   const isSectionSwitch = navId !== currentView;
+  const uiFirstRender = (currentView === null);   // first render after a page load (see js/core/view-state.js)
   currentView = navId;
   try{ localStorage.setItem('abot2_lastView', navId); }catch(e){}
   setActiveNav(navId);
@@ -28,6 +29,7 @@ function renderCurrentView(navId){
   };
   c.innerHTML = renderers[navId] ? renderers[navId]() : '<div class="empty-state">View not found</div>';
   postRenderHooks(navId);
+  if(typeof uiStateAfterRender==='function') uiStateAfterRender(navId, uiFirstRender);   // re-apply a reload draft / drop a stale one
   refreshBell();
 }
 function postRenderHooks(navId){
