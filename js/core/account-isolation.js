@@ -23,7 +23,7 @@
    by hospital/doctor name. Isolating those needs the denormalized-write
    pattern, not a simple per-uid route.)
    ============================================================ */
-const PRIVATE_ACCOUNT_KEYS = ['fitness','cycle','pregnancy','nutrition','vitals','medsTools','documents','reminders','claims','insurance','abdm'];
+const PRIVATE_ACCOUNT_KEYS = ['fitness','cycle','pregnancy','nutrition','vitals','medsTools','documents','reminders','claims','insurance','abdm','diary'];
 
 // Keys that are read by everyone but only ever seeded/administered, not
 // something a single logged-in account owns — fetched once, cached, and
