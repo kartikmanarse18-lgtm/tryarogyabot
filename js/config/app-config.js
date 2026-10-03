@@ -63,7 +63,16 @@ const OFFICIAL_LINKS = {
   digilocker: {label:'DigiLocker',             icon:'fa-folder-open',   url:'https://www.digilocker.gov.in/',  hint:'Government-issued documents in one place'},
   pmjay:      {label:'PM-JAY eligibility',     icon:'fa-shield-heart',  url:'https://beneficiary.nha.gov.in/', hint:'Check Ayushman Bharat eligibility'},
   abdm:       {label:'Ayushman Bharat Digital Mission', icon:'fa-landmark', url:'https://abdm.gov.in/',        hint:'About ABHA and digital health records'},
-  mjpjay:     {label:'Maharashtra: MJPJAY',    icon:'fa-hospital',      url:'https://www.jeevandayee.gov.in/', hint:'Mahatma Jyotiba Phule Jan Arogya Yojana (state scheme example)'}
+  mjpjay:     {label:'Maharashtra: MJPJAY',    icon:'fa-hospital',      url:'https://www.jeevandayee.gov.in/', hint:'Mahatma Jyotiba Phule Jan Arogya Yojana (state scheme example)'},
+  // Added 3 Oct 2026 (gap analysis). echs.gov.in is confirmed on the DESW site. The rest come from the gap-analysis source list or
+  // background knowledge: OPEN EACH ONCE BEFORE RELEASE, then bump OFFICIAL_LINKS_REVIEWED above.
+  echs:        {label:'ECHS (ex-servicemen)',   icon:'fa-medal',         url:'https://www.echs.gov.in/',        hint:'Polyclinics, empanelled hospitals and forms'},
+  janaushadhi: {label:'Jan Aushadhi Kendras',   icon:'fa-pills',         url:'https://janaushadhi.gov.in/',     hint:'Find low-cost generic medicine stores'},
+  aam:         {label:'Ayushman Arogya Mandir', icon:'fa-house-medical', url:'https://ab-hwc.nhp.gov.in/',      hint:'Find a health and wellness centre near you'},
+  eraktkosh:   {label:'Blood banks (e-RaktKosh)', icon:'fa-droplet',     url:'https://eraktkosh.mohfw.gov.in/', hint:'Find blood banks and stock (Health Ministry / C-DAC portal)'},
+  uwin:        {label:'U-WIN (vaccination)',    icon:'fa-syringe',       url:'https://uwin.mohfw.gov.in/',      hint:'Vaccination records for children and pregnant women'},
+  esanjeevani: {label:'eSanjeevani (free tele-consult)', icon:'fa-video', url:'https://esanjeevani.mohfw.gov.in/', hint:'Government telemedicine service'},
+  myscheme:    {label:'myScheme (find schemes)', icon:'fa-magnifying-glass', url:'https://www.myscheme.gov.in/', hint:'Search government schemes by eligibility'}
 };
 function officialLinksCardHTML(keys, heading){
   const rows = keys.map(k=>{ const l = OFFICIAL_LINKS[k]; if(!l) return '';
