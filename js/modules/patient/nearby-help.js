@@ -50,5 +50,5 @@ async function refreshNearbyWithGPS(){
   dbSet('profile', p);
   if(typeof persistActiveProfileBackToMember==='function') persistActiveProfileBackToMember();
   showToast('Location updated', 'Nearby ambulances and police recalculated from your current GPS position.', 'success');
-  if(currentView==='p-dash') renderCurrentView('p-dash');
+  if(currentView==='p-dash'){ if(typeof uiStateRunBackgroundRender==='function') uiStateRunBackgroundRender(()=>renderCurrentView('p-dash')); else renderCurrentView('p-dash'); }
 }
