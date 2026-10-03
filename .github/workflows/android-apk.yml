@@ -1,10 +1,22 @@
 name: Build Android APK
 
-# Runs on every push to main, on version tags (v1.0.0 → also creates a GitHub Release with the APK),
+# Runs when NATIVE-app files change on main, on version tags (v1.0.0 → also creates a GitHub Release with the APK),
 # and manually from the Actions tab ("Run workflow").
+#
+# WHY THE PATH FILTER: the APK is only a shell that loads the live website (see "Point the app at the live website"
+# below), so changing the web app (index.html, js/, css/, sw.js, tests/, docs/, worker-abdm/) never needs a new APK —
+# users get it as soon as GitHub Pages deploys. Only changes that alter the native shell trigger a build here.
+# Need an APK anyway? Actions tab → "Build Android APK" → "Run workflow".
 on:
   push:
     branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'capacitor.config.json'
+      - 'scripts/**'
+      - 'icons/**'
+      - '.github/workflows/android-apk.yml'
     tags: ['v*']
   workflow_dispatch:
 
