@@ -11,16 +11,21 @@ on:
 permissions:
   contents: write   # needed to attach the APK to a Release
 
+# One build per branch/tag at a time, so two quick pushes can't fight over the rolling release below.
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   apk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned: "ubuntu-latest" moves to Ubuntu 26 on 19 Oct 2026
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: 21 }
 
       - name: Install dependencies
@@ -51,16 +56,16 @@ jobs:
           python3 scripts/make-android-icons.py
 
       # Optional: remote push (FCM). Add the file's contents as repo secret GOOGLE_SERVICES_JSON.
-      # When the secret exists the app is also built with NATIVE_PUSH_ENABLED = true automatically
-      # (turning it on without the file would crash the app, so the two always go together).
+      # With the secret, the build also adds the marker "ArogyaBotPush" to the app's user-agent, which is what switches
+      # NATIVE_PUSH_ENABLED on in js/config/app-config.js (push without the file would crash the app, so the two go together).
+      # NOTE: the app loads the LIVE website, so editing a copy of app-config.js inside the APK would have no effect.
       - name: Firebase config for push (optional)
         env: { GSJ: '${{ secrets.GOOGLE_SERVICES_JSON }}' }
         run: |
           if [ -n "$GSJ" ]; then
             echo "$GSJ" > android/app/google-services.json
-            sed -i 's/const NATIVE_PUSH_ENABLED = false;/const NATIVE_PUSH_ENABLED = true;/' www/js/config/app-config.js
-            grep -n "NATIVE_PUSH_ENABLED" www/js/config/app-config.js
-            echo "Remote push ENABLED in this build"
+            node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));c.appendUserAgent='ArogyaBotPush';fs.writeFileSync('capacitor.config.json',JSON.stringify(c,null,2));"
+            echo "Remote push ENABLED in this build (user-agent marker added)"
           else
             echo "No GOOGLE_SERVICES_JSON secret — building WITHOUT remote push (reminders + in-app alerts still work)"
           fi
@@ -98,6 +103,20 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with: { name: ArogyaBot-apk, path: ArogyaBot.apk }
+
+      # PUBLIC DOWNLOAD LINK. Workflow artifacts need a GitHub login to download, so they can't be given to users.
+      # Release files are public. Every push to main (signed builds only — a debug build has a different key each time and
+      # could never update an installed app) refreshes ONE rolling release tagged `android-latest`. The app's
+      # "Get the Android app" icon reads this release (js/services/apk-download.js).
+      - name: Publish rolling public release "android-latest" (main branch, signed builds only)
+        if: github.ref_type == 'branch' && github.ref_name == 'main' && env.SIGNED == '1'
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          SHA=$(sha256sum ArogyaBot.apk | cut -d' ' -f1)
+          VER="0.1.${{ github.run_number }}"
+          printf 'Version: %s\nBuild: %s\nCommit: %s\nSHA-256: %s\n\nSigned Android build of ArogyaBot. Download ArogyaBot.apk below.\n' "$VER" "${{ github.run_number }}" "${GITHUB_SHA:0:7}" "$SHA" > release-notes.txt
+          gh release delete android-latest --cleanup-tag --yes || true
+          gh release create android-latest ArogyaBot.apk --prerelease --target "$GITHUB_SHA" --title "ArogyaBot Android (latest build)" --notes-file release-notes.txt
 
       - name: Attach to GitHub Release (tags only)
         if: github.ref_type == 'tag'
