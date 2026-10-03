@@ -9,6 +9,7 @@ function nearbyHelpCard(){
       <h3 style="margin-top:0;">Nearby help right now</h3>
       <p style="color:var(--text-muted);font-size:.85rem;">We don't have a location on file yet.</p>
       <button class="btn btn-secondary btn-sm" onclick="refreshNearbyWithGPS()"><i class="fa-solid fa-location-crosshairs"></i> Use my live location</button>
+      ${typeof nearbyGovLinksHTML==='function' ? nearbyGovLinksHTML() : ''}
     </div>`;
   }
   // Only show units genuinely within range — no padding the list out to 3/2 with
@@ -38,6 +39,7 @@ function nearbyHelpCard(){
     ${responders.length ? responders.map(r=>row(r.name+' · '+r.vehicle, r.distKm.toFixed(1)+' km · ETA '+etaMinutes(r.distKm)+' min', r.lat, r.lng)).join('') : `<p style="color:var(--text-muted);font-size:.85rem;">None available within ${NEARBY_RADIUS_KM}km right now.</p>`}
     <strong style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);display:block;margin-top:14px;">Police stations</strong>
     ${police.length ? police.map(p=>row(p.name, p.distKm.toFixed(1)+' km · ETA '+etaMinutes(p.distKm)+' min', p.lat, p.lng)).join('') : `<p style="color:var(--text-muted);font-size:.85rem;">None found within ${NEARBY_RADIUS_KM}km.</p>`}
+    ${typeof nearbyGovLinksHTML==='function' ? nearbyGovLinksHTML() : ''}
   </div>`;
 }
 async function refreshNearbyWithGPS(){

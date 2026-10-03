@@ -2,9 +2,12 @@
    PATIENT — INSURANCE / GOVT SCHEMES
    ============================================================ */
 const SCHEME_CONFIG = {
-  pmjay:   {label:'PM-JAY (Ayushman Bharat)', desc:'Cashless hospitalisation cover up to ₹5,00,000/year per household at empaneled public and private hospitals, for families identified via the SECC database or state extension schemes. Since October 2024, every citizen aged 70 or above can also get cover through the Ayushman Vay Vandana card, regardless of income.', needsPolicyFields:false},
+  pmjay:   {label:'PM-JAY (Ayushman Bharat)', desc:'Cashless hospitalisation cover up to ₹5,00,000/year per household at empaneled public and private hospitals, for families identified via the SECC database or state extension schemes. All States and UTs are now part of PM-JAY. Since October 2024, every citizen aged 70 or above can also get cover through the Ayushman Vay Vandana card, regardless of income.', needsPolicyFields:false},
   cghs:    {label:'CGHS (Central Govt. Health Scheme)', desc:'For serving/retired central government employees and pensioners. Cashless OPD and IPD treatment at CGHS wellness centres and empaneled hospitals, against your CGHS card. If you are 70 or above, you generally have to choose between CGHS and the Ayushman Vay Vandana card — check with your CGHS wellness centre before switching.', needsPolicyFields:false, extraField:{key:'cghsCategory', label:'CGHS card / beneficiary ID', placeholder:'e.g. CGHS-DL-0123456'}},
   esic:    {label:'ESIC (Employees\' State Insurance)', desc:'For organised-sector employees earning within the ESI wage ceiling and their dependents. Covers medical care, cash benefits during sickness, and maternity benefit.', needsPolicyFields:false, extraField:{key:'esicIpNumber', label:'Insured Person (IP) number', placeholder:'e.g. 1234567890'}},
+  echs:    {label:'ECHS (Ex-Servicemen Contributory Health Scheme)', desc:'For ex-servicemen pensioners and their eligible dependants. Care starts at your parent ECHS polyclinic, which refers you to service or empanelled hospitals. Treatment is cashless: ECHS pays the hospital directly at approved rates. Always carry your ECHS smart card.', needsPolicyFields:false, serviceLinked:true, referralTracker:true, officialKeys:['echs'], cardLabel:'ECHS card number', cardPlaceholder:'ECHS card number', centreLabel:'Parent polyclinic', centrePlaceholder:'e.g. ECHS Polyclinic, Nashik', emergencyNote:'In a life-threatening emergency you can go straight to an empanelled hospital without a prior referral.', checklist:['ECHS smart card','polyclinic referral slip','discharge summary','bills']},
+  capf:    {label:'Ayushman CAPF (Central Armed Police Forces)', desc:'Health cover for Central Armed Police Force personnel and their families. Cashless treatment has also been extended to Ayushman CAPF beneficiaries under the ECHS network. Confirm eligibility and the exact process with your unit or the official site.', needsPolicyFields:false, serviceLinked:true, referralTracker:false, officialKeys:['echs'], cardLabel:'Ayushman CAPF card number', cardPlaceholder:'Card number', centreLabel:'Unit / nearest centre', centrePlaceholder:'e.g. your unit or battalion', checklist:['Scheme card','ID proof','referral or pre-authorisation (if asked)','discharge summary','bills']},
+  railways:{label:'Railways health scheme', desc:'Railway employees and pensioners are generally treated through Indian Railways\' own hospitals and health units, with referrals to other hospitals where needed. Confirm eligibility and the process with your railway hospital.', needsPolicyFields:false, serviceLinked:true, referralTracker:true, officialKeys:[], cardLabel:'Railway medical card number', cardPlaceholder:'Medical card number', centreLabel:'Parent railway hospital / health unit', centrePlaceholder:'e.g. Central Railway Hospital, Byculla', checklist:['Medical card','referral letter','discharge summary','bills']},
   state:   {label:'State Government Scheme', desc:'Many states run their own top-up or standalone cashless schemes (e.g. Mahatma Jyotiba Phule Jan Arogya Yojana in Maharashtra) layered on top of or alongside PM-JAY — check with your local health department for your state\'s scheme name and card.', needsPolicyFields:false},
   private: {label:'Private Health Insurance', desc:'A privately purchased or employer-provided policy, settled either cashless (pre-authorised at a network hospital) or by reimbursement after discharge.', needsPolicyFields:true},
   none:    {label:'Not enrolled in any scheme', desc:'You can still register for PM-JAY (if eligible) at any empaneled hospital\'s Aadhaar/Ayushman desk, or purchase a private policy at any time.', needsPolicyFields:false}
@@ -18,7 +21,7 @@ function viewPatientInsurance(){
   const pid = currentPatientId();
   const ins = getInsuranceRecord(pid);
   const scheme = SCHEME_CONFIG[ins.scheme] || null;
-  return `${viewHeader('Government Schemes &amp; Insurance','Ayushman Bharat / PM-JAY, CGHS, ESIC &amp; private cover','')}
+  return `${viewHeader('Government Schemes &amp; Insurance','Ayushman Bharat / PM-JAY, CGHS, ECHS, ESIC &amp; private cover','')}
   ${officialLinksCardHTML(['pmjay','mjpjay','abha','digilocker'],'Official government sites')}
   <div class="card">
     <h3 style="margin-top:0;">Aadhaar-based scheme verification</h3>
@@ -38,6 +41,8 @@ function viewPatientInsurance(){
     <button class="btn btn-secondary btn-sm" onclick="patientSaveSchemeDetails()"><i class="fa-solid fa-floppy-disk"></i> Save scheme details</button>
     ${scheme ? `<div style="background:var(--bg-subtle);border-radius:12px;padding:12px 14px;margin-top:14px;font-size:.84rem;color:var(--text-muted);">${scheme.desc}<div style="font-size:.72rem;margin-top:8px;opacity:.85;">Information last reviewed ${OFFICIAL_LINKS_REVIEWED}. Scheme rules change — always confirm on the official site before relying on this.</div></div>` : ''}
   </div>
+  ${typeof stateSchemesCardHTML==='function' ? stateSchemesCardHTML(ins) : ''}
+  ${typeof govServicesCardHTML==='function' ? govServicesCardHTML() : ''}
   <div class="card">
     <h3 style="margin-top:0;">Submit a claim</h3>
     <div class="grid-2">
@@ -55,6 +60,7 @@ function viewPatientInsurance(){
 function schemeExtraFieldsHTML(ins){
   const scheme = SCHEME_CONFIG[ins.scheme];
   if(!scheme) return '';
+  if(scheme.serviceLinked && typeof serviceSchemeFieldsHTML==='function') return serviceSchemeFieldsHTML(ins, scheme);
   if(scheme.extraField){
     const f = scheme.extraField;
     return `<div class="form-group"><label>${f.label}</label><input class="form-control" id="ins-extra-field" value="${ins[f.key]||''}" placeholder="${f.placeholder}"></div>`;
@@ -81,6 +87,7 @@ function patientSaveSchemeDetails(){
   const patch = {scheme};
   const cfg = SCHEME_CONFIG[scheme];
   if(cfg && cfg.extraField){ patch[cfg.extraField.key] = (document.getElementById('ins-extra-field')||{}).value||''; }
+  if(cfg && cfg.serviceLinked && typeof serviceSchemePatch==='function') Object.assign(patch, serviceSchemePatch());
   if(cfg && cfg.needsPolicyFields){
     patch.insurer = (document.getElementById('ins-insurer')||{}).value||'';
     patch.policyNumber = (document.getElementById('ins-policy')||{}).value||'';
