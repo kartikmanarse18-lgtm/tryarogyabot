@@ -68,7 +68,6 @@ const OFFICIAL_LINKS = {
   // background knowledge: OPEN EACH ONCE BEFORE RELEASE, then bump OFFICIAL_LINKS_REVIEWED above.
   echs:        {label:'ECHS (ex-servicemen)',   icon:'fa-medal',         url:'https://www.echs.gov.in/',        hint:'Polyclinics, empanelled hospitals and forms'},
   janaushadhi: {label:'Jan Aushadhi Kendras',   icon:'fa-pills',         url:'https://janaushadhi.gov.in/',     hint:'Find low-cost generic medicine stores'},
-  aam:         {label:'Ayushman Arogya Mandir', icon:'fa-house-medical', url:'https://ab-hwc.nhp.gov.in/',      hint:'Find a health and wellness centre near you'},
   eraktkosh:   {label:'Blood banks (e-RaktKosh)', icon:'fa-droplet',     url:'https://eraktkosh.mohfw.gov.in/', hint:'Find blood banks and stock (Health Ministry / C-DAC portal)'},
   uwin:        {label:'U-WIN (vaccination)',    icon:'fa-syringe',       url:'https://uwin.mohfw.gov.in/',      hint:'Vaccination records for children and pregnant women'},
   esanjeevani: {label:'eSanjeevani (free tele-consult)', icon:'fa-video', url:'https://esanjeevani.mohfw.gov.in/', hint:'Government telemedicine service'},
