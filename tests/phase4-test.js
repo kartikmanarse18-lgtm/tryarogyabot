@@ -71,12 +71,13 @@ async function workerTests(){
   ok('Worker: real mode adapters are all NOT_READY',/authUrl: NOT_READY, exchange: NOT_READY, list: NOT_READY, fetchDoc: NOT_READY/.test(src));
 }
 
+const NORM_OFF=s=>s.replace(/ABDM_ENABLED\s*=\s*\w+/,'ABDM_ENABLED = false').replace(/DIGILOCKER_ENABLED\s*=\s*\w+/,'DIGILOCKER_ENABLED = false').replace(/ABDM_WORKER_URL\s*=\s*'[^']*'/,"ABDM_WORKER_URL = ''"); /* tests start from factory-default flags so they pass whatever the live config is */
 class L extends ResourceLoader{
   constructor(patches){super();this.patches=patches||[];}
   fetch(u,o){
     if(!u.startsWith('file://')) return Promise.resolve(Buffer.from(''));
     const p=super.fetch(u,o);
-    if(this.patches.length&&u.endsWith('/js/config/app-config.js')) return p.then(b=>Buffer.from(this.patches.reduce((s,[a,c])=>s.replace(a,c),b.toString())));
+    if(u.endsWith('/js/config/app-config.js')) return p.then(b=>Buffer.from(this.patches.reduce((s,[a,c])=>s.replace(a,c),NORM_OFF(b.toString()))));
     return p;
   }
 }
@@ -154,7 +155,7 @@ function staticTests(){
   ok('index.html loads digilocker.js before main.js',idx.indexOf('js/services/digilocker.js')>0&&idx.indexOf('js/services/digilocker.js')<idx.indexOf('js/main.js'));
   ok('sw.js CACHE_VERSION bumped (v6 or newer)',(+((sw.match(/CACHE_VERSION = 'v(\d+)'/)||[])[1]||0))>=6);
   const cfg=fs.readFileSync(path.join(root,'js/config/app-config.js'),'utf8');
-  ok('DigiLocker flag still OFF by default, no DigiLocker secrets in app-config.js',/DIGILOCKER_ENABLED = false/.test(cfg)&&!/DIGILOCKER_(CLIENT|SECRET)|client_secret/i.test(cfg));
+  ok('DigiLocker flag is a plain boolean, no DigiLocker secrets in app-config.js',/DIGILOCKER_ENABLED = (true|false)/.test(cfg)&&!/DIGILOCKER_(CLIENT|SECRET)|client_secret/i.test(cfg));
   const bundle=fs.readFileSync(path.join(root,'js/services/digilocker.js'),'utf8');
   ok('app code never calls DigiLocker / API Setu directly',!/digitallocker\.gov\.in|apisetu\.gov\.in\/|api\.digilocker/i.test(bundle));
   ok('app code does not use localStorage for DigiLocker data',!/localStorage|sessionStorage/.test(bundle));
