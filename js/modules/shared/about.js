@@ -56,7 +56,7 @@ function aboutStatusRows(){
     ['Maps &amp; nearby help', aboutStatus('live','Live'), 'OpenStreetMap maps with GPS. Directory entries shown are the ones in this app, not a complete national list yet.'],
     ['AI symptom checker', aiOn ? aboutStatus('live','Live + built-in') : aboutStatus('test','Built-in only'), 'A built-in medical knowledge base always works offline' + (aiOn ? ', and a cloud AI service adds richer reports when reachable.' : '.') + ' It gives information, not a diagnosis.'],
     ['Health tools (fitness, vitals, nutrition, sleep, women\'s health)', aboutStatus('live','Live'), 'Calculators, screening tools and trackers that save to your private account. They are for awareness, not diagnosis.'],
-    ['Daily health diary &amp; calendar', aboutStatus('plan','Coming soon'), 'Planned: a dated log of blood sugar, blood pressure and your own custom measurements, shown on a calendar. Today the vitals tools check a reading you type in; they do not yet keep a history.'],
+    ['Daily health diary &amp; calendar', aboutStatus('live','Live'), 'Log blood sugar, blood pressure, weight, pulse, oxygen, temperature and your own custom measurements by date. See them on a calendar and in trend charts, and copy or print a summary for your doctor. Private to your account, kept separately for each family member.'],
     ['ABHA Health ID', abdmOn ? aboutStatus('test','Test mode') : aboutStatus('plan','Not switched on'), abdmOn ? 'You can try the full linking flow, but it is a <strong>simulation</strong> (test OTP, no real ABHA is created) until the government approves production access.' : 'Official ABHA links are shown; in-app linking is switched off.'],
     ['DigiLocker import', dlOn ? aboutStatus('test','Test mode') : aboutStatus('plan','Not switched on'), dlOn ? 'Demonstration documents only. Real DigiLocker needs separate government approval.' : 'Official DigiLocker link only.'],
     ['Cloud document storage', docsOn ? aboutStatus('live','Live') : aboutStatus('plan','Rolling out'), docsOn ? 'New uploads go to private cloud storage.' : 'Waiting for the storage plan and security rules to be switched on. Existing upload still works.'],
@@ -105,15 +105,16 @@ function aboutContentHTML(){
     <p>Emergencies are rare. Staying well is every day. Alongside SOS, ArogyaBot gives patients and families a set of health tools that work together with their records, medicines and doctor visits.</p>
     <div class="about-grid">
       <div class="about-mini"><i class="fa-solid fa-heart-pulse"></i><strong>Fitness &amp; body</strong><span>BMI, ideal body weight, daily calorie needs (BMR), body-fat estimate and waist-to-hip ratio.</span></div>
-      <div class="about-mini"><i class="fa-solid fa-heart-circle-check"></i><strong>Vitals &amp; risk screening</strong><span>Check a blood-pressure or blood-sugar reading against standard ranges, see heart-rate training zones, and get diabetes and heart-disease risk scores.</span></div>
+      <div class="about-mini"><i class="fa-solid fa-heart-circle-check"></i><strong>Vitals &amp; risk screening</strong><span>Check a blood-pressure or blood-sugar reading against standard ranges, see heart-rate training zones, and get diabetes and heart-disease risk scores. Keep a dated history in the Health Diary.</span></div>
       <div class="about-mini"><i class="fa-solid fa-apple-whole"></i><strong>Nutrition</strong><span>A food nutrition table, a meal builder, and macro and daily water calculators.</span></div>
       <div class="about-mini"><i class="fa-solid fa-moon"></i><strong>Sleep &amp; lifestyle</strong><span>Sleep needs by age and sleep-cycle timing, a daily step goal, smoking pack-years and a short mental-wellbeing check.</span></div>
       <div class="about-mini"><i class="fa-solid fa-venus"></i><strong>Women\'s health</strong><span>A period and cycle tracker with a calendar, symptom, mood and pain logging, fertile-window and ovulation estimates, an optional PIN lock, plus pregnancy due-date and weight tools. Shown for female profiles.</span></div>
       <div class="about-mini"><i class="fa-solid fa-pills"></i><strong>Medicines</strong><span>Reminders that ring like alarms on Android, medication and child-dose calculators, and e-prescriptions from your doctor.</span></div>
     </div>
     <div class="about-inner" style="margin-top:14px;">
-      <div style="margin-bottom:6px;">${aboutStatus('plan','Coming soon')} <strong>Daily health diary on a calendar</strong></div>
-      <p style="margin:0;">Log your own daily readings, such as <strong>blood sugar</strong>, <strong>blood pressure</strong>, weight, and any <strong>custom measurement</strong> your doctor asks you to track, then see them day by day on a calendar with trends. You will be able to share the history with your doctor only when you choose to. This is planned and not live yet: today the vitals tools check a reading you type in, but do not keep a history.</p>
+      <div style="margin-bottom:6px;">${aboutStatus('live','Live')} <strong>Daily health diary &amp; calendar</strong></div>
+      <p style="margin:0 0 8px;">Log your own daily readings, such as <strong>blood sugar</strong>, <strong>blood pressure</strong>, weight, pulse, oxygen level, temperature, and any <strong>custom measurement</strong> your doctor asks you to track (for example HbA1c or peak flow, with your own healthy range). Every reading shows on a <strong>month calendar</strong> with a coloured dot for how it compares with common reference ranges.</p>
+      <p style="margin:0;">See your <strong>trends</strong> over 7 days to a year, spot patterns, and make a clear <strong>summary to copy, share or print</strong> for your doctor. Your diary is private to your account and kept separately for each family member. It is for awareness only and does not diagnose.</p>
     </div>
     <p style="margin:12px 0 0;font-size:.82rem;color:var(--text-muted);">These tools are for information and awareness. They do not diagnose or treat, and they do not replace a doctor.</p>`);
 
@@ -197,7 +198,7 @@ function aboutContentHTML(){
         </ul></div>
       <div class="about-phase"><div class="about-phase-h">${aboutStatus('test','Soon')} Everyday care, done better</div>
         <ul class="about-list">
-          <li>A <strong>daily health diary</strong> on a calendar: log blood sugar, blood pressure, weight and your own custom measurements, with trends and out-of-range flags, and share with your doctor only if you choose.</li>
+          <li><strong>Diary reminders and sharing:</strong> a daily nudge to log your readings, charts for your family doctor inside the app, and (with your consent) import from home devices such as glucometers and BP monitors.</li>
           <li>Vaccination and mother-and-child tracking with due-date reminders, linked to national programmes.</li>
           <li>A <strong>My Consent</strong> screen to approve, deny and revoke who can see your records.</li>
           <li>AI that reads a photographed lab report or prescription and turns it into trackable numbers, always for you to review before saving.</li>
