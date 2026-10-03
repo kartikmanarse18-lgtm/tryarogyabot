@@ -29,6 +29,13 @@ tests/                  ← automated smoke + click-through tests (npm test)
    instead of a half-working app (`js/core/load-guard.js`).
 4. Run `cd tests && npm install && npm test` before every deploy.
 
+## About page
+`js/modules/shared/about.js` renders one About page used by **every role** (last item in each side menu) and
+by a pre-login screen opened from the landing page. Edit `ABOUT_INFO` at the top of that file for version,
+maker, contact e-mail, website and an optional founder note (empty fields are hidden). The
+"what is live vs test mode" table reads the real flags in `app-config.js`, so it stays truthful when you
+switch a flag. Covered by `tests/about-test.js`. When you add files, keep `sw.js` in step and bump its cache version.
+
 ## Deploying (GitHub Pages)
 Upload the whole folder, keeping the structure. Keep your existing `manifest.json`, `sw.js` and
 `icons/` next to `index.html` (they were not part of the upload, so they're untouched).
