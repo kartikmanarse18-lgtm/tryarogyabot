@@ -20,7 +20,7 @@
    subpath on a *project* site (username.github.io/repo-name/). This
    file only ever uses relative paths for that same reason.
    ============================================================ */
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 const CACHE_NAME = 'arogyabot-shell-' + CACHE_VERSION;
 
 // Precached at install time. Keep this list to the actual app shell —
@@ -83,6 +83,7 @@ const APP_SHELL = [
   './js/services/doc-storage.js',
   './js/services/digilocker.js',
   './js/services/abdm-client.js',
+  './js/services/apk-download.js',
   './js/modules/patient/nearby-help.js',
   './js/modules/patient/nutrition-tools.js',
   './js/modules/patient/pharmacy-reminders.js',
@@ -133,6 +134,7 @@ const NEVER_INTERCEPT_HOSTS = [
   'securetoken.googleapis.com',
   'firebaseio.com',
   'api.emailjs.com',
+  'api.github.com',   // APK release check: always live, never cached
   'router.project-osrm.org',
   'nominatim.openstreetmap.org'
 ];

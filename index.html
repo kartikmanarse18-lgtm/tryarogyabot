@@ -75,6 +75,7 @@
     <div class="hero-logo"><i class="fa-solid fa-heart-pulse"></i>ArogyaBot</div>
     <div class="hero-tagline">Emergency &amp; Health Intelligence Platform</div>
     <p class="hero-desc">Tell us who's signing in. Each console has its own sign-up and verification, and every emergency still broadcasts to the nearest hospitals, ambulances, and police simultaneously — no single point of failure.</p>
+    <button class="btn-secondary btn-sm hidden" id="apk-btn-landing" style="margin-top:14px;margin-left:8px;color:#fff;background:rgba(255,255,255,.12);" onclick="openApkDownloadModal()"><i class="fa-brands fa-android"></i> Get the Android app</button>
     <button class="btn-secondary btn-sm hidden" id="pwa-install-btn-landing" style="margin-top:14px;color:#fff;background:rgba(255,255,255,.12);" onclick="triggerPwaInstall()"><i class="fa-solid fa-download"></i> Install app</button>
   </div>
   <div class="badge-grid" id="badge-grid"></div>
@@ -157,6 +158,7 @@
   <div class="topbar">
     <a href="#" class="topbar-brand" onclick="return false;"><i class="fa-solid fa-heart-pulse" style="color:#10b981;"></i>ArogyaBot</a>
     <div class="topbar-actions">
+      <button class="bell-btn hidden" id="apk-btn-topbar" onclick="openApkDownloadModal()" title="Get the Android app"><i class="fa-brands fa-android"></i></button>
       <button class="bell-btn hidden" id="pwa-install-btn" onclick="triggerPwaInstall()" title="Install ArogyaBot as an app"><i class="fa-solid fa-download"></i></button>
       <span class="role-badge-tag" id="current-role-tag">PATIENT</span>
       <div class="bell-wrap">
@@ -259,6 +261,7 @@
 <script src="./js/modules/patient/pregnancy-tools.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
 <script src="./js/modules/patient/insurance-schemes.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
 <script src="./js/modules/shared/about.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
+<script src="./js/services/apk-download.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
 <script src="./js/services/maps-leaflet.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
 <script src="./js/auth/secret-admin-access.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
 <script src="./js/core/native-bridge.js" onerror="window.__fileFailed&&__fileFailed(this)"></script>
