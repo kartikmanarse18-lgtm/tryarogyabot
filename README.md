@@ -36,6 +36,17 @@ maker, contact e-mail, website and an optional founder note (empty fields are hi
 "what is live vs test mode" table reads the real flags in `app-config.js`, so it stays truthful when you
 switch a flag. Covered by `tests/about-test.js`. When you add files, keep `sw.js` in step and bump its cache version.
 
+## Android app download ("Get the Android app")
+Android browsers show an Android icon (top bar + landing page) and an About-page card that download the APK.
+* **Where the file lives:** the GitHub Actions build refreshes one public pre-release tagged `android-latest`
+  (file `ArogyaBot.apk`, with Version and SHA-256 in its notes) on every push to `main` **when the signing secrets exist**.
+  Workflow *artifacts* need a GitHub login, so they cannot be shared with users; release files can.
+* **How the app finds it:** `js/services/apk-download.js` asks the public GitHub API whether that release exists. No release
+  yet = every icon stays hidden. Hidden on desktop and never shown inside the Android app itself.
+* **Settings:** `APK_DOWNLOAD_ENABLED`, `APK_RELEASE_REPO`, `APK_RELEASE_TAG`, `APK_FILE_NAME` in `js/config/app-config.js`.
+* **Direct link to share:** `https://github.com/<repo>/releases/download/android-latest/ArogyaBot.apk`
+* Covered by `tests/apk-download-test.js`.
+
 ## Deploying (GitHub Pages)
 Upload the whole folder, keeping the structure. Keep your existing `manifest.json`, `sw.js` and
 `icons/` next to `index.html` (they were not part of the upload, so they're untouched).
