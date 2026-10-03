@@ -108,11 +108,12 @@ function govServicesCardHTML(){
         <span style="font-size:.88rem;"><strong>Tele-MANAS · 14416</strong><br><span style="color:var(--text-muted);">Toll-free mental health support in 20 languages</span></span>
         <a class="btn btn-sm" href="tel:14416"><i class="fa-solid fa-phone"></i> Call 14416</a>
       </div></div>`
-    + officialLinksCardHTML(['aam','janaushadhi','eraktkosh','uwin','esanjeevani','myscheme'], 'Find government health services');
+    + officialLinksCardHTML(['janaushadhi','eraktkosh','uwin','esanjeevani','myscheme'], 'Find government health services')
+    + `<p style="color:var(--text-muted);font-size:.8rem;margin:-6px 4px 14px;"><strong>Ayushman Arogya Mandir</strong> (free primary-care centres): to find your nearest one, ask your ASHA worker or local PHC. There is no public citizen locator we can link to yet.</p>`;
 }
 // Compact chips used inside the Nearby Help card (dashboard).
 function nearbyGovLinksHTML(){
-  const chips = ['janaushadhi','aam','eraktkosh','echs'].map(k=>{ const l = OFFICIAL_LINKS[k]; if(!l) return '';
+  const chips = ['janaushadhi','eraktkosh','echs'].map(k=>{ const l = OFFICIAL_LINKS[k]; if(!l) return '';
     return `<a class="btn btn-secondary btn-sm" style="margin:4px 6px 0 0;" href="${l.url}" target="_blank" rel="noopener noreferrer" title="${svcEsc(l.hint)}"><i class="fa-solid ${l.icon}"></i> ${svcEsc(l.label)}</a>`; }).join('');
   return `<div style="margin-top:14px;"><strong style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);">Also find (official sites)</strong><div>${chips}</div></div>`;
 }
