@@ -10,6 +10,7 @@ const SIDENAV = {
     {id:'p-fitness', label:'Fitness Tools', icon:'fa-heart-pulse'},
     {id:'p-nutrition', label:'Nutrition', icon:'fa-apple-whole'},
     {id:'p-vitals', label:'Vitals &amp; Risk Screening', icon:'fa-heart-circle-check'},
+    {id:'p-diary', label:'Health Diary &amp; Calendar', icon:'fa-calendar-days'},
     {id:'p-records', label:'Medical Records', icon:'fa-file-medical'},
     {id:'p-tele', label:'Telemedicine', icon:'fa-video'},
     {id:'p-rx', label:'e-Prescriptions', icon:'fa-prescription'},
