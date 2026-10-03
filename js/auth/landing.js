@@ -84,6 +84,7 @@ function saveActiveSession(role){
 }
 function clearActiveSession(){
   try{ localStorage.removeItem(SESSION_KEY); }catch(e){}
+  if(typeof uiStateClear==='function') uiStateClear();   // never carry unsaved form drafts across a sign-out
 }
 function loadActiveSession(){
   try{
