@@ -85,7 +85,7 @@ function refreshPublicDirectories(){
     // (or any other directory change) actually show up without a full page
     // reload — this is the piece that was missing: initPublicDirectories()
     // only ever updated LOCAL_CACHE, it never told the UI to re-draw.
-    if(currentView) renderCurrentView(currentView);
+    if(currentView){ if(typeof uiStateRunBackgroundRender==='function') uiStateRunBackgroundRender(()=>renderCurrentView(currentView)); else renderCurrentView(currentView); }
   });
 }
 // Silent, awaited pull of just the two directories an SOS match actually
