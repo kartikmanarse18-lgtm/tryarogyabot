@@ -36,6 +36,18 @@ maker, contact e-mail, website and an optional founder note (empty fields are hi
 "what is live vs test mode" table reads the real flags in `app-config.js`, so it stays truthful when you
 switch a flag. Covered by `tests/about-test.js`. When you add files, keep `sw.js` in step and bump its cache version.
 
+## Daily Health Diary & Calendar (patients)
+Side menu: **Health Diary & Calendar** (`p-diary`). Files: `js/modules/patient/health-diary.js`, `css/health-diary.css`.
+* Log blood sugar (mg/dL or mmol/L, with fasting / after-meal / random), blood pressure (+ pulse), weight, pulse, SpO2,
+  temperature (C or F) and **custom measurements** (own name, unit, optional healthy range).
+* Month calendar with coloured dots per day, day detail with edit/delete, trend charts (7 days to 1 year) with the usual
+  range shaded, streak counter, and a **summary to copy / share / print** for a doctor. Nothing is sent anywhere.
+* Status labels reuse `bpCategory()` / `sugarCategory()` from `vitals-screening.js`, so the diary and Vitals screen agree.
+  Very high/low readings show a plain-language warning and an SOS shortcut.
+* Stored under the private `diary` key (`users/{uid}/data/diary`, already covered by the existing Firestore rule), one log
+  per family member. Capped at 4,000 readings per person (about 0.5 MB) to stay under Firestore's 1 MB document limit.
+* Covered by `tests/diary-test.js`.
+
 ## Android app download ("Get the Android app")
 Android browsers show an Android icon (top bar + landing page) and an About-page card that download the APK.
 * **Where the file lives:** the GitHub Actions build refreshes one public pre-release tagged `android-latest`
