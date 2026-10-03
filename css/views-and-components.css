@@ -44,3 +44,54 @@ textarea.form-control{resize:vertical;min-height:90px;}
 .dash-stat-icon{width:46px;height:46px;border-radius:13px;background:var(--bg-surface);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--brand-primary);box-shadow:var(--shadow-sm);flex-shrink:0;}
 .dash-stat-num{font-family:var(--ff-display);font-size:1.4rem;font-weight:800;}
 .dash-stat-label{font-size:.76rem;color:var(--text-muted);font-weight:600;}
+
+/* ============================================================
+   ABOUT PAGE (js/modules/shared/about.js) — uses shared tokens so every role theme applies
+   ============================================================ */
+.about-wrap{max-width:920px;}
+.about-wrap-screen{margin:0 auto;padding:8px 16px 24px;}
+.about-card{margin-bottom:18px;}
+.about-h{margin:0 0 12px;font-family:var(--ff-display);font-size:1.1rem;display:flex;align-items:center;gap:10px;}
+.about-h i{color:var(--brand-primary);}
+.about-card p{line-height:1.65;margin:0 0 10px;}
+.about-hero{display:flex;gap:18px;align-items:center;margin-bottom:18px;}
+.about-hero-logo{width:64px;height:64px;border-radius:18px;background:var(--brand-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.7rem;flex-shrink:0;}
+.about-hero-title{font-family:var(--ff-display);font-size:1.8rem;font-weight:800;letter-spacing:-.02em;}
+.about-hero-sub{color:var(--text-muted);line-height:1.55;max-width:560px;}
+.about-notice{display:flex;gap:14px;align-items:flex-start;border-left:4px solid var(--brand-danger);margin-bottom:18px;line-height:1.55;}
+.about-notice>i{color:var(--brand-danger);font-size:1.3rem;margin-top:2px;}
+.about-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.about-mini{background:var(--bg-subtle);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;gap:6px;font-size:.88rem;line-height:1.5;}
+.about-mini>i{color:var(--brand-primary);font-size:1.1rem;}
+.about-mini span{color:var(--text-muted);}
+.about-steps{margin:0;padding-left:20px;line-height:1.65;}
+.about-steps li{margin-bottom:8px;}
+.about-roles{display:flex;flex-direction:column;gap:12px;}
+.about-role{display:flex;gap:14px;align-items:flex-start;}
+.about-role-ico{width:38px;height:38px;border-radius:11px;background:var(--bg-subtle);color:var(--brand-primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.about-role-txt{color:var(--text-muted);font-size:.88rem;line-height:1.55;margin-top:2px;}
+.about-status{display:flex;flex-direction:column;border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;}
+.about-status-row{display:grid;grid-template-columns:210px 130px 1fr;gap:12px;align-items:start;padding:12px 14px;border-bottom:1px solid var(--border-color);font-size:.86rem;}
+.about-status-row:last-child{border-bottom:0;}
+.about-status-name{font-weight:700;}
+.about-status-note{color:var(--text-muted);line-height:1.5;}
+.about-list{margin:0;padding-left:20px;line-height:1.65;}
+.about-list li{margin-bottom:8px;}
+.about-chips{display:flex;flex-wrap:wrap;gap:2px;}
+.about-road{display:flex;flex-direction:column;gap:14px;}
+.about-phase{border:1px solid var(--border-color);border-radius:var(--radius-md);padding:14px 16px;}
+.about-phase-h{font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.about-quote{margin:14px 0 0;padding:12px 16px;border-left:4px solid var(--brand-primary);background:var(--bg-subtle);border-radius:0 var(--radius-md) var(--radius-md) 0;font-style:italic;}
+.about-inner{background:var(--bg-subtle);border-radius:var(--radius-md);padding:14px 16px;margin:10px 0;}
+.about-inner h3{font-size:.95rem;}
+.about-table{display:flex;flex-direction:column;}
+.about-row{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-color);font-size:.88rem;}
+.about-row:last-child{border-bottom:0;}
+.about-k{color:var(--text-muted);font-weight:600;}
+#screen-about{min-height:100vh;background:var(--bg-main);}
+@media (max-width:760px){
+  .about-grid{grid-template-columns:1fr;}
+  .about-status-row{grid-template-columns:1fr;gap:6px;}
+  .about-row{grid-template-columns:1fr;gap:2px;}
+  .about-hero{flex-direction:column;align-items:flex-start;}
+}
